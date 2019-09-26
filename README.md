@@ -28,18 +28,35 @@
             $ go get "github.com/mariiatuzovska/frodokem"
 ```
 
-3. create main.go in your GOPATH package
+3. create frodo.go in your GOPATH package
 
 ```
             $ touch frodo.go
 ```
 
-4. follow
+4. follow this code
+
+```
+            package main
+
+            import (
+                "fmt"
+
+                "github.com/mariiatuzovska/frodokem/frodo"
+            )
+
+            func main() {
+
+                frodo640 := frodo.Frodo640()
+                fmt.Println(frodo640)
+
+            }    
+```
 
 5. run the program
 
 ```
-            $ go run main.go
+            $ go run frodo.go
 ```
 
 ... wait. i am hard working on it. gophers are hard working on it.
