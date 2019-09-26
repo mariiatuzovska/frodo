@@ -1,9 +1,11 @@
 package frodo
 
 import (
+	"fmt"
 	"math"
 	"math/big"
 	"math/bits"
+	"math/rand"
 )
 
 type Frodo interface { // all funcs for this pkg
@@ -102,6 +104,16 @@ func (param *Parameters) Encode(k *big.Int) [][]uint16 {
 func (param *Parameters) Decode(K [][]uint16) *big.Int {
 
 	k := big.NewInt(0)
+	for i, row := range K {
+		for j := range row {
+			temp := []rune(fmt.Sprintf("%b", param.dc(K[i][j])))
+			for l := 0; l < param.B; l++ {
+				if temp[l] == 1 {
+					k.SetBit(k, (i*param.n+j)*param.B+l, 1)
+				}
+			}
+		}
+	}
 
 	return k
 }
@@ -112,4 +124,30 @@ func (param *Parameters) ec(k uint16) uint16 {
 	exp := param.D - B
 
 	return k * uint16(uint32(math.Pow(2, float64(exp)))%param.q)
+}
+
+func (param *Parameters) dc(c uint16) uint16 {
+
+	b, exp, a := big.NewInt(int64(param.B)), big.NewInt(int64(param.D-param.B)), big.NewInt(2)
+	a.Exp(a, exp, b)
+	a.ModInverse(a, b)
+	result := uint16(a.Int64())
+
+	return (c * result) % uint16(param.B)
+}
+
+// todo test dc(ec(k)) = k
+
+func (param *Parameters) Test() {
+	for i := 0; i < 10; i++ {
+		a := uint16(rand.Int())
+		s := fmt.Sprintf("%x", a)
+		fmt.Println(s)
+		d := param.ec(a)
+		s = fmt.Sprintf("%x", d)
+		fmt.Println(s)
+		a = param.dc(d)
+		s = fmt.Sprintf("%x", a)
+		fmt.Println(s)
+	}
 }
