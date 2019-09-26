@@ -25,7 +25,7 @@
 2. get this project
 
 ```
-            $ go get "github.com/mariiatuzovska/cryptanalysis"
+            $ go get "github.com/mariiatuzovska/frodokem"
 ```
 
 3. create main.go in your GOPATH package
