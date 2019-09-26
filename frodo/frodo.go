@@ -1,18 +1,15 @@
 package frodo
 
 import (
-	"log"
 	"math"
 	"math/big"
 	"math/bits"
 )
 
-// пока что я решила : битовые строки это *big.Int
-// размерность битовых строк int
-
 type Frodo interface { // all funcs for this pkg
+
 	Encode(k *big.Int) [][]uint16 // encodes an integer 0 ≤ k < 2^B as an element in Zq by multiplying it by q/2B = 2^(D−B): ec(k) := k·q/2^B
-	Decode(K [][]uint16) uint16   // decodes the m-by-n matrix K into a bit string of length l = B·m·n. dc(c) = ⌊c·2^B/q⌉ mod 2^B
+	Decode(K [][]uint16) *big.Int // decodes the m-by-n matrix K into a bit string of length l = B·m·n. dc(c) = ⌊c·2^B/q⌉ mod 2^B
 	Pack()
 	Unpack()
 	Sample()
@@ -20,65 +17,99 @@ type Frodo interface { // all funcs for this pkg
 }
 
 type Parameters struct {
-	x       []float32 // a probability distribution on Z
-	q       uint16    // a power-of-two integer modulus with exponent D ≤ 16
-	D       int       // a power
-	m, n    int       // integer matrix dimensions with n ≡ 0 (mod 8)
-	B       int       // the number of bits encoded in each matrix entry
-	l       int       // B·m·n, the length of bit strings that are encoded as m-by-n matrices
-	lseedA  int       // the bit length of seeds used for pseudorandom matrix generation
-	lseedSE int       // the bit length of seeds used for pseudorandom bit generation for error sampling
+	no      int    // n ≡ 0 (mod 8)
+	q       uint32 // a power-of-two integer modulus with exponent D ≤ 16
+	D       int    // a power
+	m, n    int    // integer matrix dimensions with
+	B       int    // the number of bits encoded in each matrix entry
+	l       int    // B·m·n, the length of bit strings that are encoded as m-by-n matrices
+	lseedA  int    // the bit length of seeds used for pseudorandom matrix generation
+	lseedSE int    // the bit length of seeds used for pseudorandom bit generation for error sampling
+	x       uint16 // a probability distribution on Z
 }
 
-func New() *Parameters {
-	return new(Parameters)
-}
+func Frodo640() *Parameters {
 
-func SetParameters(D int) *Parameters { //ongoing
 	param := new(Parameters)
-	if D > 17 {
-		log.Fatal("power-of-two integer modulus must exponent D ≤ 16")
-	}
-	param.q = uint16(math.Pow(2, float64(D)))
-	param.D = D
-	//param.B = ??
-	//param.m = ??
-	//param.n = ??
-	param.l = param.B * param.m * param.n
+
+	param.no = 640
+	param.q = 32768
+	param.D = 15
+	param.B = 2
+	param.m = 8
+	param.n = 8
+	param.lseedA = 128
+	param.lseedSE = 128
+	param.l = 128
+
 	return param
 }
 
-// func (param *Parameters) Encode(k *big.Int) uint16 {
-// 	K := make([][]uint16, param.m)
-// 	for i := range K {
-// 		K[i] = make([]uint16, param.n)
-// 		for j := range K[i] {
-// 			temp := uint16(0)
-// 			for l := int(0); l < param.B; l++ {
-// 				//temp +=
-// 			}
-// 			K[i][j] = param.ec(temp)
-// 		}
-// 	}
-// }
+func Frodo976() *Parameters {
 
-func (param *Parameters) ec(k uint16) uint16 {
-	B := bits.Len16(k)
-	e := param.D - B
-	return k * uint16(math.Pow(2, float64(e))) % param.q
+	param := new(Parameters)
+
+	param.no = 976
+	param.q = 65536
+	param.D = 16
+	param.B = 3
+	param.m = 8
+	param.n = 8
+	param.lseedA = 128
+	param.lseedSE = 128
+	param.l = 128
+
+	return param
 }
 
-func cutBitString(str *big.Int, a, b int) *big.Int {
-	result, one := big.NewInt(0), big.NewInt(1)
-	for i := a; i <= b; i++ {
-		result.Lsh(result, 1)
-		if str.Bit(i) == 1 {
-			result.Add(result, one)
+func Frodo1344() *Parameters {
+
+	param := new(Parameters)
+
+	param.no = 1344
+	param.q = 65536
+	param.D = 16
+	param.B = 4
+	param.m = 8
+	param.n = 8
+	param.lseedA = 128
+	param.lseedSE = 128
+	param.l = 128
+
+	return param
+}
+
+func (param *Parameters) Encode(k *big.Int) [][]uint16 {
+
+	K := make([][]uint16, param.m)
+
+	for i := range K {
+		K[i] = make([]uint16, param.n)
+		for j := range K[i] {
+			temp, c := uint16(0), uint16(1)
+			for l := 0; l < param.B; l++ {
+				if (k.Bit((i*param.n+j)*param.B + l)) == 1 {
+					temp += c
+				}
+				c *= 2
+			}
+			K[i][j] = param.ec(temp)
 		}
 	}
-	return result
+	return K
 }
 
-// func (param *Parameters) Decode(K [][]uint16) uint16 {
+func (param *Parameters) Decode(K [][]uint16) *big.Int {
 
-// }
+	k := big.NewInt(0)
+
+	return k
+}
+
+func (param *Parameters) ec(k uint16) uint16 {
+
+	B := bits.Len16(k)
+	exp := param.D - B
+
+	return k * uint16(uint32(math.Pow(2, float64(exp)))%param.q)
+}
