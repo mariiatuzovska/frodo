@@ -1,18 +1,16 @@
 package frodo
 
 import (
-	"fmt"
-	"math"
-	"math/big"
 	"math/bits"
-	"math/rand"
+
+	"github.com/mariiatuzovska/frodokem/util/bitstr"
 )
 
 type Frodo interface { // all funcs for this pkg
 
-	Encode(k *big.Int) [][]uint16 // encodes an integer 0 ≤ k < 2^B as an element in Zq by multiplying it by q/2B = 2^(D−B): ec(k) := k·q/2^B
-	Decode(K [][]uint16) *big.Int // decodes the m-by-n matrix K into a bit string of length l = B·m·n. dc(c) = ⌊c·2^B/q⌉ mod 2^B
-	Pack()
+	Encode(k *bitstr.BitString) [][]uint16 // encodes an integer 0 ≤ k < 2^B as an element in Zq by multiplying it by q/2B = 2^(D−B): ec(k) := k·q/2^B
+	Decode(K [][]uint16) *bitstr.BitString // decodes the m-by-n matrix K into a bit string of length l = B·m·n. dc(c) = ⌊c·2^B/q⌉ mod 2^B
+	Pack(K [][]uint16)                     // packs a matrix into a bit string
 	Unpack()
 	Sample()
 	SampleMatrix()
@@ -81,7 +79,7 @@ func Frodo1344() *Parameters {
 	return param
 }
 
-func (param *Parameters) Encode(k *big.Int) [][]uint16 {
+func (param *Parameters) Encode(k *bitstr.BitString) [][]uint16 {
 
 	K := make([][]uint16, param.m)
 
@@ -101,53 +99,30 @@ func (param *Parameters) Encode(k *big.Int) [][]uint16 {
 	return K
 }
 
-func (param *Parameters) Decode(K [][]uint16) *big.Int {
+func (param *Parameters) Decode(K [][]uint16) *bitstr.BitString {
 
-	k := big.NewInt(0)
+	k := bitstr.New(param.l / 16)
 	for i, row := range K {
 		for j := range row {
-			temp := []rune(fmt.Sprintf("%b", param.dc(K[i][j])))
+			temp := param.dc(K[i][j])
 			for l := 0; l < param.B; l++ {
-				if temp[l] == 1 {
-					k.SetBit(k, (i*param.n+j)*param.B+l, 1)
+				if temp&1 == 1 {
+					k.SetBit((i*param.n+j)*param.B+l, 1)
 				}
+				temp >>= 1
 			}
 		}
 	}
-
 	return k
 }
 
 func (param *Parameters) ec(k uint16) uint16 {
-
-	B := bits.Len16(k)
-	exp := param.D - B
-
-	return k * uint16(uint32(math.Pow(2, float64(exp)))%param.q)
+	t := bits.RotateLeft16(1, param.D-param.B)
+	return t * k
 }
 
 func (param *Parameters) dc(c uint16) uint16 {
-
-	b, exp, a := big.NewInt(int64(param.B)), big.NewInt(int64(param.D-param.B)), big.NewInt(2)
-	a.Exp(a, exp, b)
-	a.ModInverse(a, b)
-	result := uint16(a.Int64())
-
-	return (c * result) % uint16(param.B)
-}
-
-// todo test dc(ec(k)) = k
-
-func (param *Parameters) Test() {
-	for i := 0; i < 10; i++ {
-		a := uint16(rand.Int())
-		s := fmt.Sprintf("%x", a)
-		fmt.Println(s)
-		d := param.ec(a)
-		s = fmt.Sprintf("%x", d)
-		fmt.Println(s)
-		a = param.dc(d)
-		s = fmt.Sprintf("%x", a)
-		fmt.Println(s)
-	}
+	b, d := bits.RotateLeft16(1, param.B), bits.RotateLeft32(1, param.D-param.B)
+	r, _ := bits.Div32(0, uint32(c), d)
+	return uint16(r) % b
 }

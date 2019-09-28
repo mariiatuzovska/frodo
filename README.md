@@ -1,14 +1,17 @@
 # FrodoKEM
 
-*Practical quantum-secure key encapsulation from generic lattices*
+*Practical quantum-secure key encapsulation from generic lattices, golang realisation*
 
 **Abstract.** The FrodoKEM schemes are designed to be _conservative_ yet practical post-quantum constructions whose security derives from cautious parameterizations of the well-studied learning with errors problem, which in turn has close connections to conjectured-hard problems on generic, “algebraically unstructured” [lattices](https://en.wikipedia.org/wiki/Lattice_(order)).
 
 [https://frodokem.org/](https://frodokem.org/)
 
+![](https://github.com/mariiatuzovska/frodokem/img/frodo.jpg)
+
 ### List of packages and implementations
 
 * FrodoKEM specification [`papers`](https://github.com/mariiatuzovska/frodokem/blob/master/papers/FrodoKEM-specification-20190702.pdf)
+* Little-endian 16-bit-base strings [`util/bitstr`](https://github.com/mariiatuzovska/frodokem/util/bitstr/bitstr.go)
 * Matrix encoding of bit strings [`frodo`](https://github.com/mariiatuzovska/frodokem/blob/master/frodo/frodo.go)
 * Selected parameter sets [`frodo`](https://github.com/mariiatuzovska/frodokem/blob/master/frodo/frodo.go)
 
@@ -58,5 +61,3 @@
 ```
             $ go run frodo.go
 ```
-
-... wait. i am hard working on it. gophers are hard working on it.
