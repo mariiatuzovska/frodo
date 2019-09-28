@@ -6,7 +6,13 @@
 
 [https://frodokem.org/](https://frodokem.org/)
 
-![](https://github.com/mariiatuzovska/frodokem/img/frodo.jpg)
+![](https://github.com/mariiatuzovska/frodokem/blob/master/img/frodo.jpg)
+
+### Progress
+
+- [x] Success mencode and decode matrices in Zq;
+- [ ] Pack & Unpack matrices;
+- [ ] Read all;
 
 ### List of packages and implementations
 
