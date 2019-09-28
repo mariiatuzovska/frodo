@@ -10,7 +10,7 @@
 
 ### Progress
 
-- [x] Success mencode and decode matrices in Zq;
+- [x] Success encode and decode matrices in Zq;
 - [ ] Pack & Unpack matrices;
 - [ ] Read all;
 
