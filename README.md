@@ -1,6 +1,6 @@
 # FrodoKEM
 
-*Golang library implementation FrodoKEM: practical quantum-secure key encapsulation from generic lattices.*
+*Golang library of implementation FrodoKEM: practical quantum-secure key encapsulation from generic lattices.*
 
 **Abstract.** The FrodoKEM schemes are designed to be _conservative_ yet practical post-quantum constructions whose security derives from cautious parameterizations of the well-studied [learning with errors problem](https://en.wikipedia.org/wiki/Learning_with_errors), which in turn has close connections to conjectured-hard problems on generic, “algebraically unstructured” [lattices](https://en.wikipedia.org/wiki/Lattice_(order)).
 
