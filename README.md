@@ -2,26 +2,46 @@
 
 *Practical quantum-secure key encapsulation from generic lattices, golang realisation*
 
-**Abstract.** The FrodoKEM schemes are designed to be _conservative_ yet practical post-quantum constructions whose security derives from cautious parameterizations of the well-studied learning with errors problem, which in turn has close connections to conjectured-hard problems on generic, “algebraically unstructured” [lattices](https://en.wikipedia.org/wiki/Lattice_(order)).
+**Abstract.** The FrodoKEM schemes are designed to be _conservative_ yet practical post-quantum constructions whose security derives from cautious parameterizations of the well-studied [learning with errors problem](https://en.wikipedia.org/wiki/Learning_with_errors), which in turn has close connections to conjectured-hard problems on generic, “algebraically unstructured” [lattices](https://en.wikipedia.org/wiki/Lattice_(order)).
 
 [https://frodokem.org/](https://frodokem.org/)
 
 ![](https://github.com/mariiatuzovska/frodokem/blob/master/img/frodo.jpg)
 
-### Progress
+## Progress
 
-- [x] Success encode and decode matrices in Zq;
-- [ ] Pack & Unpack matrices;
-- [ ] Read all;
+- [x] Selected parameter sets;
+- [x] Success encode & decode matrices in Zq;
+- [x] Success pack & unpack matrices;
+- [ ] Read all in specification;
+- [x] Sampling from the error distribution;
+- [x] Pseudorandom matrix generation using SHAKE128;
+- [ ] IND-CPA-secure public-key encryption scheme;
+- [ ] Transform from IND-CPA PKE to IND-CCA KEM;
+- [ ] IND-CCA-secure key encapsulation mechanism.
 
-### List of packages and implementations
+## List of implementations/packages
 
-* FrodoKEM specification [`papers`](https://github.com/mariiatuzovska/frodokem/blob/master/papers/FrodoKEM-specification-20190702.pdf)
-* Little-endian 16-bit-base strings [`util/bitstr`](https://github.com/mariiatuzovska/frodokem/util/bitstr/bitstr.go)
-* Matrix encoding of bit strings [`frodo`](https://github.com/mariiatuzovska/frodokem/blob/master/frodo/frodo.go)
-* Selected parameter sets [`frodo`](https://github.com/mariiatuzovska/frodokem/blob/master/frodo/frodo.go)
+* FrodoKEM specification [`papers`](https://github.com/mariiatuzovska/frodokem/blob/master/papers/FrodoKEM-specification-20190702.pdf);
+* Little-endian 16-bit-base strings [`util/bitstr`](https://github.com/mariiatuzovska/frodokem/blob/master/util/bitstr/bitstr.go);
+* Matrix encoding of bit strings [`frodo`](https://github.com/mariiatuzovska/frodokem/blob/master/frodo/frodo.go);
+* Selected parameter sets [`frodo`](https://github.com/mariiatuzovska/frodokem/blob/master/frodo/frodo.go);
+* Deterministic random bit generation using SHAKE128 [`frodo`](https://github.com/mariiatuzovska/frodokem/blob/master/frodo/frodo.go);
+* SHAKE128 [`golang.org/x/crypto/sha3`](https://godoc.org/golang.org/x/crypto/sha3);
+* Generation of key pairs [`pke`](https://github.com/mariiatuzovska/frodokem/blob/master/frodo/pke.go);
 
-### How to run
+## Advantages & Disadvantages
+
+:ok_hand: You can add your custom parameters following code in function [`func Frodo640`](https://github.com/mariiatuzovska/frodokem/blob/master/frodo/frodo.go) (if you understand [main theory](https://github.com/mariiatuzovska/frodokem/blob/master/papers/FrodoKEM-specification-20190702.pdf)) and use them in any future work with FrodoKEM;
+
+:poop: It is hard mathematical task to get the parameters (I think so);
+
+:poop: Not good implementation of bit-sequences (I think so);
+
+:heart_eyes_cat: Pretty native golang (I think so).
+
+
+## How to run
 
 0. [install GO](https://golang.org/doc/install?download=go1.13.darwin-amd64.pkg) if you need and initialise GOPATH
 
@@ -31,10 +51,11 @@
             $ cd ~/go/src
 ```
 
-2. get this project
+2. get this project and [golang.org/x/crypto](https://godoc.org/golang.org/x/crypto) library
 
 ```
             $ go get "github.com/mariiatuzovska/frodokem"
+            $ go get "golang.org/x/crypto"
 ```
 
 3. create frodo.go in your GOPATH package
@@ -46,20 +67,21 @@
 4. follow this code
 
 ```
-            package main
+    package main
 
-            import (
-                "fmt"
+    import (
+        "fmt"
+        
+        "github.com/mariiatuzovska/frodokem/frodo"
+    )
 
-                "github.com/mariiatuzovska/frodokem/frodo"
-            )
+    func main() {
 
-            func main() {
+         frodo640 := frodo.Frodo640()
+         fmt.Println(frodo640)
 
-                frodo640 := frodo.Frodo640()
-                fmt.Println(frodo640)
+    } 
 
-            }    
 ```
 
 5. run the program
