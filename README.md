@@ -1,6 +1,6 @@
 # FrodoKEM
 
-*Practical quantum-secure key encapsulation from generic lattices, golang realisation*
+*Golang library implementation FrodoKEM: practical quantum-secure key encapsulation from generic lattices.*
 
 **Abstract.** The FrodoKEM schemes are designed to be _conservative_ yet practical post-quantum constructions whose security derives from cautious parameterizations of the well-studied [learning with errors problem](https://en.wikipedia.org/wiki/Learning_with_errors), which in turn has close connections to conjectured-hard problems on generic, “algebraically unstructured” [lattices](https://en.wikipedia.org/wiki/Lattice_(order)).
 
@@ -22,13 +22,19 @@
 
 ## List of implementations/packages
 
-* FrodoKEM specification [`papers`](https://github.com/mariiatuzovska/frodokem/blob/master/papers/FrodoKEM-specification-20190702.pdf);
-* Little-endian 16-bit-base strings [`util/bitstr`](https://github.com/mariiatuzovska/frodokem/blob/master/util/bitstr/bitstr.go);
-* Matrix encoding of bit strings [`frodo`](https://github.com/mariiatuzovska/frodokem/blob/master/frodo/frodo.go);
-* Selected parameter sets [`frodo`](https://github.com/mariiatuzovska/frodokem/blob/master/frodo/frodo.go);
-* Deterministic random bit generation using SHAKE128 [`frodo`](https://github.com/mariiatuzovska/frodokem/blob/master/frodo/frodo.go);
-* SHAKE128 [`golang.org/x/crypto/sha3`](https://godoc.org/golang.org/x/crypto/sha3);
-* Generation of key pairs [`pke`](https://github.com/mariiatuzovska/frodokem/blob/master/frodo/pke.go);
+:point_right: FrodoKEM specification [`papers`](https://github.com/mariiatuzovska/frodokem/blob/master/papers/FrodoKEM-specification-20190702.pdf);
+
+:point_right: Little-endian 16-bit-base strings [`util/bitstr`](https://github.com/mariiatuzovska/frodokem/blob/master/util/bitstr/bitstr.go);
+
+:point_right: Matrix encoding of bit strings [`frodo`](https://github.com/mariiatuzovska/frodokem/blob/master/frodo/frodo.go);
+
+:point_right: Selected parameter sets [`frodo`](https://github.com/mariiatuzovska/frodokem/blob/master/frodo/frodo.go);
+
+:point_right: Deterministic random bit generation using SHAKE128 [`frodo`](https://github.com/mariiatuzovska/frodokem/blob/master/frodo/frodo.go);
+
+:point_right: SHAKE128 [`golang.org/x/crypto/sha3`](https://godoc.org/golang.org/x/crypto/sha3);
+
+:point_right: Generation of key pairs [`pke`](https://github.com/mariiatuzovska/frodokem/blob/master/frodo/pke.go);
 
 ## Advantages & Disadvantages
 
@@ -89,3 +95,9 @@
 ```
             $ go run frodo.go
 ```
+
+## Inspiration
+
+:green_heart: [microsoft git](https://github.com/Microsoft/PQCrypto-LWEKE)
+
+:purple_heart: [microsoft research](https://www.microsoft.com/en-us/research/?from=http%3A%2F%2Fresearch.microsoft.com%2F)
