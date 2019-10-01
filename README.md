@@ -22,17 +22,17 @@
 
 ## Math
 
-# Vectors and matrices over the ring
+### Vectors and matrices over the ring
 
 The ring of integers Z for a positive integer q, the quotient ring of integers modulo q is denoted by Zq = Z/qZ.
 
-# Learning With Errors
+### Learning With Errors
 
 The security of PKE and KEM relies on the hardness of the Learning With Errors (LWE) problem. 
 
 **LWE distribution.** Let n,q be positive integers, and let X be a distribution over Z. For an *s* in (Zq)^n, the LWE *distribution* A(s,x) is the distribution over (Zq)^n \* Zq obtained by choosing *a* in (Zq)^n uniformly at random and an integer error *e* in Z from X, and outputting the pair <*a*, <*a*, *s*> + *e* (mod q)> in (Zq)^n \* Zq.
 
-# Pseudorandom matrix generation
+### Pseudorandom matrix generation
 
 As NIST currently does not standardize such a primitive, so I choose proposals in [`FrodoKEM specification`](https://github.com/mariiatuzovska/frodokem/blob/master/papers/FrodoKEM-specification-20190702.pdf) to use SHAKE128 & SHAKE256.
 
