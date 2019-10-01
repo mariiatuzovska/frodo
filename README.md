@@ -8,7 +8,7 @@
 
 ![](https://github.com/mariiatuzovska/frodokem/blob/master/img/frodo.jpg)
 
-## Progress
+## Progress 35%
 
 - [x] Selected parameter sets;
 - [x] Success encode & decode matrices in Zq;
@@ -18,23 +18,19 @@
 - [x] Pseudorandom matrix generation using SHAKE128, SHAKE256;
 - [ ] IND-CPA-secure public-key encryption (PKE) scheme (encryption/decryption, key generation);
 - [ ] Transform from IND-CPA PKE to IND-CCA key encapsulation mechanism (KEM);
-- [ ] IND-CCA-secure key encapsulation mechanism (KEM).
+- [ ] IND-CCA-secure key encapsulation mechanism (KEM);
+
+- [ ] Writting tests.
 
 ## Math
 
-### Vectors and matrices over the ring
+**Vectors and matrices over the ring.** The ring of integers Z for a positive integer q, the quotient ring of integers modulo q is denoted by Zq = Z/qZ.
 
-The ring of integers Z for a positive integer q, the quotient ring of integers modulo q is denoted by Zq = Z/qZ.
-
-### Learning With Errors
-
-The security of PKE and KEM relies on the hardness of the Learning With Errors (LWE) problem. 
+**Learning With Errors.** The security of PKE and KEM relies on the hardness of the Learning With Errors (LWE) problem. 
 
 **LWE distribution.** Let n,q be positive integers, and let X be a distribution over Z. For an *s* in (Zq)^n, the LWE *distribution* A(s,x) is the distribution over (Zq)^n \* Zq obtained by choosing *a* in (Zq)^n uniformly at random and an integer error *e* in Z from X, and outputting the pair <*a*, <*a*, *s*> + *e* (mod q)> in (Zq)^n \* Zq.
 
-### Pseudorandom matrix generation
-
-As NIST currently does not standardize such a primitive, so I choose proposals in [`FrodoKEM specification`](https://github.com/mariiatuzovska/frodokem/blob/master/papers/FrodoKEM-specification-20190702.pdf) to use SHAKE128 & SHAKE256.
+**Pseudorandom matrix generation.** As NIST currently does not standardize such a primitive, so I choose proposals in [`FrodoKEM specification`](https://github.com/mariiatuzovska/frodokem/blob/master/papers/FrodoKEM-specification-20190702.pdf) to use SHAKE128 & SHAKE256.
 
 ## List of implementations/packages
 
@@ -64,9 +60,9 @@ As NIST currently does not standardize such a primitive, so I choose proposals i
 
 ## Inspiration
 
-:green_heart: [microsoft git](https://github.com/Microsoft/PQCrypto-LWEKE)
+:boom: [microsoft git](https://github.com/Microsoft/PQCrypto-LWEKE)
 
-:purple_heart: [microsoft research](https://www.microsoft.com/en-us/research/?from=http%3A%2F%2Fresearch.microsoft.com%2F)
+:boom: [microsoft research](https://www.microsoft.com/en-us/research/?from=http%3A%2F%2Fresearch.microsoft.com%2F)
 
 ## How to run
 
@@ -117,4 +113,4 @@ As NIST currently does not standardize such a primitive, so I choose proposals i
             $ go run frodo.go
 ```
 
-## Examples 
+![](https://github.com/mariiatuzovska/frodokem/blob/master/img/gopher.png)

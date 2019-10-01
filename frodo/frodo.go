@@ -8,20 +8,19 @@ import (
 	"golang.org/x/crypto/sha3"
 )
 
-type Frodo interface { // frodo interface
-
-	Encode(k *bitstr.BitString) [][]uint16                   // encodes an integer 0 ≤ k < 2^B as an element in Zq by multiplying it by q/2B = 2^(D−B): ec(k) := k·q/2^B
-	Decode(K [][]uint16) *bitstr.BitString                   // decodes the m-by-n matrix K into a bit string of length l = B·m·n. dc(c) = ⌊c·2^B/q⌉ mod 2^B
-	Pack(C [][]uint16) *bitstr.BitString                     // packs a matrix into a bit string
-	Unpack(b *bitstr.BitString, n1, n2 int) [][]uint16       // unpacks a bit string into a matrix
-	Gen(seed *bitstr.BitString) [][]uint16                   // returns a pseudorandom matrix using SHAKE128
-	Sample(t uint16) uint16                                  // returns a sample e from the distribution χ
-	SampleMatrix(r *bitstr.BitString, n1, n2 int) [][]uint16 // sample the n1 * n2 matrix entry
-
+// Frodo interface
+type Frodo interface {
+	Encode(k *bitstr.BitString) [][]uint16                   // Encode encodes an integer 0 ≤ k < 2^B as an element in Zq by multiplying it by q/2B = 2^(D−B): ec(k) := k·q/2^B
+	Decode(K [][]uint16) *bitstr.BitString                   // Decode decodes the m-by-n matrix K into a bit string of length l = B·m·n. dc(c) = ⌊c·2^B/q⌉ mod 2^B
+	Pack(C [][]uint16) *bitstr.BitString                     // Pack packs a matrix into a bit string
+	Unpack(b *bitstr.BitString, n1, n2 int) [][]uint16       // Unpack unpacks a bit string into a matrix
+	Gen(seed *bitstr.BitString) [][]uint16                   // Gen returns a pseudorandom matrix using SHAKE128
+	Sample(t uint16) uint16                                  // Sample returns a sample e from the distribution χ
+	SampleMatrix(r *bitstr.BitString, n1, n2 int) [][]uint16 // SampleMatrix sample the n1 * n2 matrix entry
 }
 
-type Parameters struct { // parameters
-
+// Parameters of frodo KEM mechanism
+type Parameters struct {
 	no      int      // n ≡ 0 (mod 8)
 	q       uint32   // a power-of-two integer modulus with exponent D ≤ 16
 	D       int      // a power
@@ -32,8 +31,10 @@ type Parameters struct { // parameters
 	lseedSE int      // the bit length of seeds used for pseudorandom bit generation for error sampling
 	lenX    int      // length of χ distribution
 	X       []uint16 // a probability distribution on Z, rounded Gaussian distribution
+	lenM    int      // bit length of message
 }
 
+// Frodo640 returns Parameters struct no.640
 func Frodo640() *Parameters {
 
 	param := new(Parameters)
@@ -46,6 +47,7 @@ func Frodo640() *Parameters {
 	param.n = 8
 	param.lseedA = 128
 	param.lseedSE = 128
+	param.lenM = 128
 	param.lenX = 16
 	param.l = 128
 	param.X = []uint16{9288, 8720, 7216, 5264, 3384, 1918, 958, 422, 164, 56, 17, 4, 1}
@@ -53,6 +55,7 @@ func Frodo640() *Parameters {
 	return param
 }
 
+// Frodo976 returns Parameters struct no.976
 func Frodo976() *Parameters {
 
 	param := new(Parameters)
@@ -65,6 +68,7 @@ func Frodo976() *Parameters {
 	param.n = 8
 	param.lseedA = 128
 	param.lseedSE = 128
+	param.lenM = 128
 	param.lenX = 16
 	param.l = 128
 	param.X = []uint16{11278, 10277, 7774, 4882, 2545, 1101, 396, 118, 29, 6, 1}
@@ -72,6 +76,7 @@ func Frodo976() *Parameters {
 	return param
 }
 
+// Frodo1344 returns Parameters struct no.1344
 func Frodo1344() *Parameters {
 
 	param := new(Parameters)
@@ -84,6 +89,7 @@ func Frodo1344() *Parameters {
 	param.n = 8
 	param.lseedA = 128
 	param.lseedSE = 128
+	param.lenM = 128
 	param.lenX = 16
 	param.l = 128
 	param.X = []uint16{18286, 14320, 6876, 2023, 364, 40, 2}
@@ -91,6 +97,7 @@ func Frodo1344() *Parameters {
 	return param
 }
 
+// Encode encodes an integer 0 ≤ k < 2^B as an element in Zq by multiplying it by q/2B = 2^(D−B): ec(k) := k·q/2^B
 func (param *Parameters) Encode(k *bitstr.BitString) [][]uint16 {
 
 	K := make([][]uint16, param.m)
@@ -110,6 +117,7 @@ func (param *Parameters) Encode(k *bitstr.BitString) [][]uint16 {
 	return K
 }
 
+// Decode decodes the m-by-n matrix K into a bit string of length l = B·m·n. dc(c) = ⌊c·2^B/q⌉ mod 2^B
 func (param *Parameters) Decode(K [][]uint16) *bitstr.BitString {
 
 	k := bitstr.New(param.l)
@@ -127,6 +135,7 @@ func (param *Parameters) Decode(K [][]uint16) *bitstr.BitString {
 	return k
 }
 
+// Pack packs a matrix into a bit string
 func (param *Parameters) Pack(C [][]uint16) *bitstr.BitString {
 
 	b, n2 := bitstr.New(param.D*len(C)*len(C[0])), len(C[0])
@@ -143,6 +152,7 @@ func (param *Parameters) Pack(C [][]uint16) *bitstr.BitString {
 	return b
 }
 
+// Unpack unpacks a bit string into a matrix
 func (param *Parameters) Unpack(b *bitstr.BitString, n1, n2 int) [][]uint16 {
 
 	C := make([][]uint16, n1)
@@ -162,6 +172,7 @@ func (param *Parameters) Unpack(b *bitstr.BitString, n1, n2 int) [][]uint16 {
 	return C
 }
 
+// Gen returns a pseudorandom matrix using SHAKE128
 func (param *Parameters) Gen(seed *bitstr.BitString) [][]uint16 {
 
 	A := make([][]uint16, param.n)
@@ -185,6 +196,7 @@ func (param *Parameters) Gen(seed *bitstr.BitString) [][]uint16 {
 	return A
 }
 
+// Sample returns a sample e from the distribution χ
 func (param *Parameters) Sample(r uint16) uint16 {
 
 	e, c, t := uint16(0), r&1, r>>1
@@ -199,9 +211,10 @@ func (param *Parameters) Sample(r uint16) uint16 {
 	return e
 }
 
+// SampleMatrix sample the n1 * n2 matrix entry
 func (param *Parameters) SampleMatrix(r *bitstr.BitString, n1, n2 int) [][]uint16 { // i hope it works
 
-	if r.Len()/16 < n1*n2 {
+	if r.Len() < n1*n2 {
 		log.Fatal("Invalid input in SampleMatrix() frodo.go")
 	}
 	E := make([][]uint16, n1)
