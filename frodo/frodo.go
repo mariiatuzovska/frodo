@@ -10,13 +10,13 @@ import (
 
 type Frodo interface { // frodo interface
 
-	Encode(k *bitstr.BitString) [][]uint16                // encodes an integer 0 ≤ k < 2^B as an element in Zq by multiplying it by q/2B = 2^(D−B): ec(k) := k·q/2^B
-	Decode(K [][]uint16) *bitstr.BitString                // decodes the m-by-n matrix K into a bit string of length l = B·m·n. dc(c) = ⌊c·2^B/q⌉ mod 2^B
-	Pack(C [][]uint16) *bitstr.BitString                  // packs a matrix into a bit string
-	Unpack(b *bitstr.BitString, n1, n2 int) [][]uint16    // unpacks a bit string into a matrix
-	Gen(seed *bitstr.BitString) [][]uint16                // returns a pseudorandom matrix using SHAKE128
-	Sample(t uint16) int                                  // returns a sample e from the distribution χ
-	SampleMatrix(r *bitstr.BitString, n1, n2 int) [][]int // sample the n1 * n2 matrix entry
+	Encode(k *bitstr.BitString) [][]uint16                   // encodes an integer 0 ≤ k < 2^B as an element in Zq by multiplying it by q/2B = 2^(D−B): ec(k) := k·q/2^B
+	Decode(K [][]uint16) *bitstr.BitString                   // decodes the m-by-n matrix K into a bit string of length l = B·m·n. dc(c) = ⌊c·2^B/q⌉ mod 2^B
+	Pack(C [][]uint16) *bitstr.BitString                     // packs a matrix into a bit string
+	Unpack(b *bitstr.BitString, n1, n2 int) [][]uint16       // unpacks a bit string into a matrix
+	Gen(seed *bitstr.BitString) [][]uint16                   // returns a pseudorandom matrix using SHAKE128
+	Sample(t uint16) uint16                                  // returns a sample e from the distribution χ
+	SampleMatrix(r *bitstr.BitString, n1, n2 int) [][]uint16 // sample the n1 * n2 matrix entry
 
 }
 
@@ -48,7 +48,7 @@ func Frodo640() *Parameters {
 	param.lseedSE = 128
 	param.lenX = 16
 	param.l = 128
-	param.X = []uint16{9288, 8720, 7216, 5264, 3384, 1918, 958, 422, 164, 56, 17, 4, 1, 0, 0, 0}
+	param.X = []uint16{9288, 8720, 7216, 5264, 3384, 1918, 958, 422, 164, 56, 17, 4, 1}
 
 	return param
 }
@@ -67,7 +67,7 @@ func Frodo976() *Parameters {
 	param.lseedSE = 128
 	param.lenX = 16
 	param.l = 128
-	param.X = []uint16{11278, 10277, 7774, 4882, 2545, 1101, 396, 118, 29, 6, 1, 0, 0, 0, 0, 0}
+	param.X = []uint16{11278, 10277, 7774, 4882, 2545, 1101, 396, 118, 29, 6, 1}
 
 	return param
 }
@@ -86,7 +86,7 @@ func Frodo1344() *Parameters {
 	param.lseedSE = 128
 	param.lenX = 16
 	param.l = 128
-	param.X = []uint16{18286, 14320, 6876, 2023, 364, 40, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+	param.X = []uint16{18286, 14320, 6876, 2023, 364, 40, 2}
 
 	return param
 }
@@ -94,7 +94,6 @@ func Frodo1344() *Parameters {
 func (param *Parameters) Encode(k *bitstr.BitString) [][]uint16 {
 
 	K := make([][]uint16, param.m)
-
 	for i := range K {
 		K[i] = make([]uint16, param.n)
 		for j := range K[i] {
@@ -186,31 +185,28 @@ func (param *Parameters) Gen(seed *bitstr.BitString) [][]uint16 {
 	return A
 }
 
-func (param *Parameters) Sample(t uint16) int {
+func (param *Parameters) Sample(r uint16) uint16 {
 
-	e, c := 0, int(t&1)
-	t >>= 1
-	for z := 0; z < param.lenX; z++ {
-		if t > param.X[z] && param.X[z] != 0 {
+	e, c, t := uint16(0), r&1, r>>1
+	for z := range param.X {
+		if t > param.X[z] {
 			e++
 		}
 	}
-	if c == 0 {
-		c = 1
-	} else {
-		c = -1
+	if c != 0 {
+		e = uint16(param.q - uint32(e))
 	}
-	return c * e
+	return e
 }
 
-func (param *Parameters) SampleMatrix(r *bitstr.BitString, n1, n2 int) [][]int {
+func (param *Parameters) SampleMatrix(r *bitstr.BitString, n1, n2 int) [][]uint16 { // i hope it works
 
 	if r.Len()/16 < n1*n2 {
 		log.Fatal("Invalid input in SampleMatrix() frodo.go")
 	}
-	E := make([][]int, n1)
+	E := make([][]uint16, n1)
 	for i := 0; i < n1; i++ {
-		E[i] = make([]int, n2)
+		E[i] = make([]uint16, n2)
 		for j := 0; j < n2; j++ {
 			t := r.GetUint16(i*n2 + j)
 			E[i][j] = param.Sample(t)

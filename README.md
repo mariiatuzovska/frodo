@@ -1,6 +1,6 @@
 # FrodoKEM
 
-*Golang library of implementation FrodoKEM: practical quantum-secure key encapsulation from generic lattices.*
+*Practical quantum-secure key encapsulation from generic lattices.*
 
 **Abstract.** The FrodoKEM schemes are designed to be _conservative_ yet practical post-quantum constructions whose security derives from cautious parameterizations of the well-studied [learning with errors problem](https://en.wikipedia.org/wiki/Learning_with_errors), which in turn has close connections to conjectured-hard problems on generic, “algebraically unstructured” [lattices](https://en.wikipedia.org/wiki/Lattice_(order)).
 
@@ -15,10 +15,26 @@
 - [x] Success pack & unpack matrices;
 - [ ] Read all in specification;
 - [x] Sampling from the error distribution;
-- [x] Pseudorandom matrix generation using SHAKE128;
-- [ ] IND-CPA-secure public-key encryption scheme;
-- [ ] Transform from IND-CPA PKE to IND-CCA KEM;
-- [ ] IND-CCA-secure key encapsulation mechanism.
+- [x] Pseudorandom matrix generation using SHAKE128, SHAKE256;
+- [ ] IND-CPA-secure public-key encryption (PKE) scheme (encryption/decryption, key generation);
+- [ ] Transform from IND-CPA PKE to IND-CCA key encapsulation mechanism (KEM);
+- [ ] IND-CCA-secure key encapsulation mechanism (KEM).
+
+## Math
+
+# Vectors and matrices over the ring
+
+The ring of integers Z for a positive integer q, the quotient ring of integers modulo q is denoted by Zq = Z/qZ.
+
+# Learning With Errors
+
+The security of PKE and KEM relies on the hardness of the Learning With Errors (LWE) problem. 
+
+**LWE distribution.** Let n,q be positive integers, and let X be a distribution over Z. For an *s* in (Zq)^n, the LWE *distribution* A(s,x) is the distribution over (Zq)^n \* Zq obtained by choosing *a* in (Zq)^n uniformly at random and an integer error *e* in Z from X, and outputting the pair <*a*, <*a*, *s*> + *e* (mod q)> in (Zq)^n \* Zq.
+
+# Pseudorandom matrix generation
+
+As NIST currently does not standardize such a primitive, so I choose proposals in [`FrodoKEM specification`](https://github.com/mariiatuzovska/frodokem/blob/master/papers/FrodoKEM-specification-20190702.pdf) to use SHAKE128 & SHAKE256.
 
 ## List of implementations/packages
 
@@ -36,16 +52,21 @@
 
 :point_right: Generation of key pairs [`pke`](https://github.com/mariiatuzovska/frodokem/blob/master/frodo/pke.go);
 
-## Advantages & Disadvantages
+## Advantages & Disadvantages of my implementation
 
 :ok_hand: You can add your custom parameters following code in function [`func Frodo640`](https://github.com/mariiatuzovska/frodokem/blob/master/frodo/frodo.go) (if you understand [main theory](https://github.com/mariiatuzovska/frodokem/blob/master/papers/FrodoKEM-specification-20190702.pdf)) and use them in any future work with FrodoKEM;
 
-:poop: It is hard mathematical task to get the parameters (I think so);
+:poop: It is hard mathematical task to get the parameters;
 
-:poop: Not good implementation of bit-sequences (I think so);
+:poop: Not good implementation of bit-sequences, maybe will be better in time;
 
-:heart_eyes_cat: Pretty native golang (I think so).
+:heart_eyes_cat: Pretty native Golang.
 
+## Inspiration
+
+:green_heart: [microsoft git](https://github.com/Microsoft/PQCrypto-LWEKE)
+
+:purple_heart: [microsoft research](https://www.microsoft.com/en-us/research/?from=http%3A%2F%2Fresearch.microsoft.com%2F)
 
 ## How to run
 
@@ -70,7 +91,7 @@
             $ touch frodo.go
 ```
 
-4. follow this code
+4. follow this code to check current work of library
 
 ```
     package main
@@ -83,9 +104,9 @@
 
     func main() {
 
-         frodo640 := frodo.Frodo640()
-         fmt.Println(frodo640)
-
+        frodo640 := frodo.Frodo640()
+        pk, sk := frodo640.KeyGen()
+        
     } 
 
 ```
@@ -96,8 +117,4 @@
             $ go run frodo.go
 ```
 
-## Inspiration
-
-:green_heart: [microsoft git](https://github.com/Microsoft/PQCrypto-LWEKE)
-
-:purple_heart: [microsoft research](https://www.microsoft.com/en-us/research/?from=http%3A%2F%2Fresearch.microsoft.com%2F)
+## Examples 
