@@ -20,7 +20,7 @@
 - [ ] Transform from IND-CPA PKE to IND-CCA key encapsulation mechanism (KEM);
 - [ ] IND-CCA-secure key encapsulation mechanism (KEM);
 
-- [ ] Writting tests.
+- [ ] Writing tests.
 
 ## Math
 

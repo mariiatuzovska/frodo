@@ -92,6 +92,17 @@ func (b *BitString) Get2Bytes(index int) []byte {
 	return bytes
 }
 
+// ConcatUint16First concatenate input uint16 with BitString
+func (b *BitString) ConcatUint16(u uint16) {
+
+	temp := New(b.Len() + 16)
+	temp.str[0] = u
+	for i := 0; i < b.len; i++ {
+		temp.str[i+1] = b.str[i]
+	}
+	b = temp
+}
+
 // Len returns len (count of bits) of bitstring
 func (b *BitString) Len() int {
 	return b.len * 16

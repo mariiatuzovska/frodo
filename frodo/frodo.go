@@ -21,7 +21,7 @@ type Frodo interface {
 
 // Parameters of frodo KEM mechanism
 type Parameters struct {
-	no      int      // n ≡ 0 (mod 8)
+	no      int      // n ≡ 0 (mod 8) the main parameter
 	q       uint32   // a power-of-two integer modulus with exponent D ≤ 16
 	D       int      // a power
 	m, n    int      // integer matrix dimensions with
@@ -175,9 +175,13 @@ func (param *Parameters) Unpack(b *bitstr.BitString, n1, n2 int) [][]uint16 {
 // Gen returns a pseudorandom matrix using SHAKE128
 func (param *Parameters) Gen(seed *bitstr.BitString) [][]uint16 {
 
-	A := make([][]uint16, param.n)
-	for i := 0; i < param.n; i++ {
-		b, shakeStr := seed.Get2Bytes(i), make([]byte, 2*param.n)
+	A := make([][]uint16, param.no)
+	for i := uint16(0); i < uint16(param.no); i++ {
+		seedA, shakeStr := seed, make([]byte, param.no*2)
+		seedA.ConcatUint16(i)
+		b := seedA.GetBytes()
+		A[i] = make([]uint16, param.no)
+
 		if param.no == 640 {
 			shake := sha3.NewShake128()
 			shake.Write(b)
@@ -187,12 +191,12 @@ func (param *Parameters) Gen(seed *bitstr.BitString) [][]uint16 {
 			shake.Write(b)
 			shake.Read(shakeStr)
 		}
-		A[i] = make([]uint16, param.m)
-		for j := 0; j < param.m; j++ {
-			u16 := (uint16(shakeStr[j*2]) << 8) + uint16(shakeStr[j*2+1])
-			A[i][j] = uint16(uint32(u16) % param.q)
+
+		for j := 0; j < param.no; j++ {
+			A[i][j] = (uint16(shakeStr[j*2]) << 8) | uint16(shakeStr[i*2+1])
 		}
 	}
+
 	return A
 }
 
@@ -212,9 +216,9 @@ func (param *Parameters) Sample(r uint16) uint16 {
 }
 
 // SampleMatrix sample the n1 * n2 matrix entry
-func (param *Parameters) SampleMatrix(r *bitstr.BitString, n1, n2 int) [][]uint16 { // i hope it works
+func (param *Parameters) SampleMatrix(r *bitstr.BitString, n1, n2 int) [][]uint16 {
 
-	if r.Len() < n1*n2 {
+	if r.Len()/16 < n1*n2 {
 		log.Fatal("Invalid input in SampleMatrix() frodo.go")
 	}
 	E := make([][]uint16, n1)
