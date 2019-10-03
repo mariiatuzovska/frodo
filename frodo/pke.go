@@ -4,21 +4,20 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/mariiatuzovska/frodokem/util/bitstr"
 	"golang.org/x/crypto/sha3"
 )
 
 // PKE interface
 type PKE interface {
-	KeyGen() (pk *PublicKey, sk *SecretKey)                  // key pair generation
-	Enc(pk *PublicKey) (C1, C2 [][]uint16)                   // return encrypted messages
-	Dec(cipher *CipherText, sk *SecretKey) *bitstr.BitString // return decrypted with sekret key cihertext
+	KeyGen() (pk *PublicKey, sk *SecretKey)       // key pair generation
+	Enc(pk *PublicKey) (C1, C2 [][]uint16)        // return encrypted messages
+	Dec(cipher *CipherText, sk *SecretKey) []byte // return decrypted with sekret key cihertext
 }
 
 // PublicKey internal structure
 type PublicKey struct {
-	seedA *bitstr.BitString // uniform string
-	B     [][]uint16        // matrix є Zq
+	seedA []byte     // uniform string
+	B     [][]uint16 // matrix є Zq
 }
 
 // SecretKey internal structure
@@ -35,13 +34,16 @@ type CipherText struct {
 func (param *Parameters) KeyGen() (pk *PublicKey, sk *SecretKey) {
 
 	pk, sk = new(PublicKey), new(SecretKey)
-	pk.seedA = bitstr.NewRand(param.lseedA)
+	rLen := param.no * param.n * param.lenX / 4
+	seedSE, r := make([]byte, (param.lseedSE/8)+1), make([]byte, rLen)
 
-	seedSE, r := make([]byte, (param.lseedSE/8)+1), make([]byte, param.no*param.n*param.lenX/4)
+	rand.Seed(time.Now().UTC().UnixNano())
+	for i := range pk.seedA {
+		pk.seedA[i] = byte(rand.Intn(256))
+	}
 
 	seedSE[0] = 0x5F
 	for i := 1; i < len(seedSE); i++ {
-		rand.Seed(time.Now().UTC().UnixNano())
 		seedSE[i] = byte(rand.Intn(256))
 	}
 
@@ -55,9 +57,12 @@ func (param *Parameters) KeyGen() (pk *PublicKey, sk *SecretKey) {
 		shake.Read(r)
 	}
 
-	r1, r2 := bitstr.New(param.no*param.n*param.lenX), bitstr.New(param.no*param.n*param.lenX)
-	r1.SetBytesHalf(r, 0, param.no*param.n*param.lenX/8)
-	r2.SetBytesHalf(r, param.no*param.n*param.lenX/8, param.no*param.n*param.lenX/4)
+	rLen /= 2
+	r1, r2 := make([]byte, rLen), make([]byte, rLen)
+	for i := range r1 {
+		r1[i] = r[i]
+		r2[i] = r[rLen+i]
+	}
 
 	A := param.Gen(pk.seedA)
 	sk.S = param.SampleMatrix(r1, param.no, param.n)
@@ -69,15 +74,15 @@ func (param *Parameters) KeyGen() (pk *PublicKey, sk *SecretKey) {
 }
 
 // Enc encrypts message for chosen parameters length
-func (param *Parameters) Enc(message *bitstr.BitString, pk *PublicKey) *CipherText {
+func (param *Parameters) Enc(message []byte, pk *PublicKey) *CipherText {
 
 	A, mn := param.Gen(pk.seedA), param.n*param.m
 	seedSE := make([]byte, ((param.lseedSE / 8) + 1))
 	r := make([]byte, ((2*param.m*param.no+mn)*param.lenX)/8)
 
 	seedSE[0] = byte(0x96)
+	rand.Seed(time.Now().UTC().UnixNano())
 	for i := 1; i < len(seedSE); i++ {
-		rand.Seed(time.Now().UTC().UnixNano())
 		seedSE[i] = byte(rand.Int())
 	}
 
@@ -91,10 +96,16 @@ func (param *Parameters) Enc(message *bitstr.BitString, pk *PublicKey) *CipherTe
 		shake.Read(r)
 	}
 
-	r1, r2, r3 := bitstr.New(param.m*param.no*param.lenX), bitstr.New(param.m*param.no*param.lenX), bitstr.New(mn*param.lenX)
-	r1.SetBytesHalf(r, 0, param.m*param.no/8)
-	r2.SetBytesHalf(r, param.m*param.no/8, param.m*param.no/4)
-	r3.SetBytesHalf(r, param.m*param.no/4, (2*param.m*param.no+mn)/8)
+	rLen := param.m * param.no * param.lenX / 8
+	r1, r2, r3 := make([]byte, rLen), make([]byte, rLen), make([]byte, mn*param.lenX/8)
+	for i := range r1 {
+		r1[i] = r[i]
+		r2[i] = r[rLen+i]
+	}
+	rLen *= 2
+	for i := range r3 {
+		r3[i] = r[rLen+i]
+	}
 
 	S1 := param.SampleMatrix(r1, param.m, param.no)
 	E1 := param.SampleMatrix(r2, param.m, param.no)
@@ -109,7 +120,7 @@ func (param *Parameters) Enc(message *bitstr.BitString, pk *PublicKey) *CipherTe
 }
 
 // Dec return decrypted with secret key cihertext
-func (param *Parameters) Dec(cipher *CipherText, sk *SecretKey) *bitstr.BitString {
+func (param *Parameters) Dec(cipher *CipherText, sk *SecretKey) []byte {
 
 	M := param.subMatrices(cipher.C2, param.mulMatrices(cipher.C1, sk.S))
 	message := param.Decode(M)

@@ -4,19 +4,18 @@ import (
 	"log"
 	"math/bits"
 
-	"github.com/mariiatuzovska/frodokem/util/bitstr"
 	"golang.org/x/crypto/sha3"
 )
 
 // Frodo interface
 type Frodo interface {
-	Encode(k *bitstr.BitString) [][]uint16                   // Encode encodes an integer 0 ≤ k < 2^B as an element in Zq by multiplying it by q/2B = 2^(D−B): ec(k) := k·q/2^B
-	Decode(K [][]uint16) *bitstr.BitString                   // Decode decodes the m-by-n matrix K into a bit string of length l = B·m·n. dc(c) = ⌊c·2^B/q⌉ mod 2^B
-	Pack(C [][]uint16) *bitstr.BitString                     // Pack packs a matrix into a bit string
-	Unpack(b *bitstr.BitString, n1, n2 int) [][]uint16       // Unpack unpacks a bit string into a matrix
-	Gen(seed *bitstr.BitString) [][]uint16                   // Gen returns a pseudorandom matrix using SHAKE128
-	Sample(t uint16) uint16                                  // Sample returns a sample e from the distribution χ
-	SampleMatrix(r *bitstr.BitString, n1, n2 int) [][]uint16 // SampleMatrix sample the n1 * n2 matrix entry
+	Encode(k []byte) [][]uint16 // Encode encodes an integer 0 ≤ k < 2^B as an element in Zq by multiplying it by q/2B = 2^(D−B): ec(k) := k·q/2^B
+	Decode(K [][]uint16) []byte // Decode decodes the m-by-n matrix K into a bit string of length l = B·m·n. dc(c) = ⌊c·2^B/q⌉ mod 2^B
+	//Pack(C [][]uint16) []byte                     // Pack packs a matrix into a bit string
+	//Unpack(b []byte, n1, n2 int) [][]uint16       // Unpack unpacks a bit string into a matrix
+	Gen(seed []byte) [][]uint16                   // Gen returns a pseudorandom matrix using SHAKE128
+	Sample(t uint16) uint16                       // Sample returns a sample e from the distribution χ
+	SampleMatrix(r []byte, n1, n2 int) [][]uint16 // SampleMatrix sample the n1 * n2 matrix entry
 }
 
 // Parameters of frodo KEM mechanism
@@ -50,7 +49,7 @@ func Frodo640() *Parameters {
 	param.lenM = 128
 	param.lenX = 16
 	param.l = 128
-	param.X = []uint16{9288, 8720, 7216, 5264, 3384, 1918, 958, 422, 164, 56, 17, 4, 1}
+	param.X = []uint16{4643, 13363, 20579, 25843, 29227, 31145, 32103, 32525, 32689, 32745, 32762, 32766, 32767} //спиздила у майкрософта. ну а как по-другому??? где его было найти XD
 
 	return param
 }
@@ -71,7 +70,7 @@ func Frodo976() *Parameters {
 	param.lenM = 128
 	param.lenX = 16
 	param.l = 128
-	param.X = []uint16{11278, 10277, 7774, 4882, 2545, 1101, 396, 118, 29, 6, 1}
+	param.X = []uint16{5638, 15915, 23689, 28571, 31116, 32217, 32613, 32731, 32760, 32766, 32767}
 
 	return param
 }
@@ -92,24 +91,24 @@ func Frodo1344() *Parameters {
 	param.lenM = 128
 	param.lenX = 16
 	param.l = 128
-	param.X = []uint16{18286, 14320, 6876, 2023, 364, 40, 2}
+	param.X = []uint16{9142, 23462, 30338, 32361, 32725, 32765, 32767}
 
 	return param
 }
 
 // Encode encodes an integer 0 ≤ k < 2^B as an element in Zq by multiplying it by q/2B = 2^(D−B): ec(k) := k·q/2^B
-func (param *Parameters) Encode(k *bitstr.BitString) [][]uint16 {
+func (param *Parameters) Encode(k []byte) [][]uint16 {
 
 	K := make([][]uint16, param.m)
 	for i := range K {
 		K[i] = make([]uint16, param.n)
 		for j := range K[i] {
-			temp, c := uint16(0), uint16(1)
+			temp := uint16(0)
 			for l := 0; l < param.B; l++ {
-				if (k.Bit((i*param.n+j)*param.B + l)) == 1 {
-					temp += c
+				index, shift := ((i*param.n+j)*param.B+l)/8, uint(((i*param.n+j)*param.B+l)%8)
+				if k[index]&(byte(0x80)>>shift) != 0 { // litte-endian
+					temp |= uint16(1 << uint(l)) // big-endian
 				}
-				c *= 2
 			}
 			K[i][j] = param.ec(temp)
 		}
@@ -117,70 +116,73 @@ func (param *Parameters) Encode(k *bitstr.BitString) [][]uint16 {
 	return K
 }
 
-// Decode decodes the m-by-n matrix K into a bit string of length l = B·m·n. dc(c) = ⌊c·2^B/q⌉ mod 2^B
-func (param *Parameters) Decode(K [][]uint16) *bitstr.BitString {
+// Decode decodes the m*n matrix K into a bit string of {0,1}^(B·m·n). dc(c) = ⌊c·2^B/q⌉ mod 2^B
+func (param *Parameters) Decode(K [][]uint16) []byte {
 
-	k := bitstr.New(param.l)
+	k := make([]byte, param.l/8)
 	for i, row := range K {
 		for j := range row {
-			temp := param.dc(K[i][j])
+			temp := param.dc(K[i][j]) // big-endian
 			for l := 0; l < param.B; l++ {
-				if temp&1 == 1 {
-					k.SetBit((i*param.n+j)*param.B+l, 1)
+				if temp&uint16(1<<uint(l)) != 0 {
+					index, shift := ((i*param.n+j)*param.B+l)/8, uint(((i*param.n+j)*param.B+l)%8)
+					k[index] |= byte(0x80) >> shift // litte-endian
 				}
-				temp >>= 1
 			}
 		}
 	}
 	return k
 }
 
-// Pack packs a matrix into a bit string
-func (param *Parameters) Pack(C [][]uint16) *bitstr.BitString {
+// // Pack packs a matrix (n1*n2) over Zq into a bit string {0,1}^(D*n1*n2)
+// func (param *Parameters) Pack(C [][]uint16) []byte {
 
-	b, n2 := bitstr.New(param.D*len(C)*len(C[0])), len(C[0])
-	for i, row := range C {
-		for j := range row {
-			temp := uint16(0x8000)
-			for l := 0; l < param.D; l++ {
-				if (temp>>uint(l))&C[i][j] != 0 {
-					b.SetBit((i*n2+j)*param.D+l, 1)
-				}
-			}
-		}
-	}
-	return b
-}
+// 	n1, n2 := len(C), len(C[0])
+// 	b := make([]byte, param.D*n1*n2/8)
+// 	for i, row := range C {
+// 		for j := range row {
+// 			for l := 0; l < param.D; l++ {
+// 				if uint16(1<<uint(param.D-1-l))&C[i][j] != 0 {
+// 					index, shift := ((i*n2+j)*param.D+l)/8, uint(((i*n2+j)*param.D+l)%8)
+// 					b[index] |= byte(0x80) >> shift
+// 				}
+// 			}
+// 		}
+// 	}
+// 	return b
+// }
 
-// Unpack unpacks a bit string into a matrix
-func (param *Parameters) Unpack(b *bitstr.BitString, n1, n2 int) [][]uint16 {
+// // Unpack unpacks a bit string {0,1}^(D*n1*n2) into a matrix (n1*n2) over Zq
+// func (param *Parameters) Unpack(b []byte, n1, n2 int) [][]uint16 {
 
-	C := make([][]uint16, n1)
-	for i := range C {
-		C[i] = make([]uint16, n2)
-		for j := range C[i] {
-			temp, k := uint16(0), uint16(0x8000)
-			for l := 0; l < param.D; l++ {
-				if b.Bit((i*n2+j)*param.D+l) == 1 {
-					temp += k
-				}
-				k >>= 1
-			}
-			C[i][j] = temp
-		}
-	}
-	return C
-}
+// 	C := make([][]uint16, n1)
+// 	for i := range C {
+// 		C[i] = make([]uint16, n2)
+// 		for j := range C[i] {
+// 			temp := uint16(0)
+// 			for l := 0; l < param.D; l++ {
+// 				index, shift := ((i*n2+j)*param.D+l)/8, uint(((i*n2+j)*param.D+l)%8)
+// 				if b[index]&byte(0x80>>shift) != 0 {
+// 					temp |= uint16(1) << uint(l)
+// 				}
+// 			}
+// 			C[i][j] = temp
+// 		}
+// 	}
+// 	return C
+// }
 
 // Gen returns a pseudorandom matrix using SHAKE128
-func (param *Parameters) Gen(seed *bitstr.BitString) [][]uint16 {
+func (param *Parameters) Gen(seed []byte) [][]uint16 {
 
 	A := make([][]uint16, param.no)
 	for i := uint16(0); i < uint16(param.no); i++ {
-		seedA, shakeStr := seed, make([]byte, param.no*2)
-		seedA.ConcatUint16(i)
-		b := seedA.GetBytes()
-		A[i] = make([]uint16, param.no)
+		b, shakeStr := make([]byte, len(seed)+2), make([]byte, param.no*2)
+		b[0] = byte(i >> 8)
+		b[1] = byte(i)
+		for k := range seed {
+			b[k+2] = seed[k]
+		}
 
 		if param.no == 640 {
 			shake := sha3.NewShake128()
@@ -192,8 +194,9 @@ func (param *Parameters) Gen(seed *bitstr.BitString) [][]uint16 {
 			shake.Read(shakeStr)
 		}
 
+		A[i] = make([]uint16, param.no)
 		for j := 0; j < param.no; j++ {
-			A[i][j] = (uint16(shakeStr[j*2]) << 8) | uint16(shakeStr[i*2+1])
+			A[i][j] = uint16(uint32((uint16(shakeStr[j*2])<<8)|uint16(shakeStr[i*2+1])) % param.q)
 		}
 	}
 
@@ -203,29 +206,30 @@ func (param *Parameters) Gen(seed *bitstr.BitString) [][]uint16 {
 // Sample returns a sample e from the distribution χ
 func (param *Parameters) Sample(r uint16) uint16 {
 
-	e, c, t := uint16(0), r&1, r>>1
+	e, t := uint16(0), r>>1
 	for z := range param.X {
 		if t > param.X[z] {
 			e++
 		}
 	}
-	if c != 0 {
-		e = uint16(param.q - uint32(e))
+	if r&1 != 0 {
+		e = uint16((param.q - uint32(e)) % param.q)
 	}
 	return e
 }
 
 // SampleMatrix sample the n1 * n2 matrix entry
-func (param *Parameters) SampleMatrix(r *bitstr.BitString, n1, n2 int) [][]uint16 {
+func (param *Parameters) SampleMatrix(r []byte, n1, n2 int) [][]uint16 {
 
-	if r.Len()/16 < n1*n2 {
+	if len(r) != n1*n2*param.lenX/8 {
 		log.Fatal("Invalid input in SampleMatrix() frodo.go")
 	}
 	E := make([][]uint16, n1)
 	for i := 0; i < n1; i++ {
 		E[i] = make([]uint16, n2)
 		for j := 0; j < n2; j++ {
-			t := r.GetUint16(i*n2 + j)
+			index := (i*n2 + j) * 2
+			t := (uint16(r[index]) << 8) | uint16(r[index+1])
 			E[i][j] = param.Sample(t)
 		}
 	}

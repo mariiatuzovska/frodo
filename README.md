@@ -8,23 +8,27 @@
 
 ![](https://github.com/mariiatuzovska/frodokem/blob/master/img/frodo.jpg)
 
-## Progress 35%
+## Progress 10%
 
 - [x] Selected parameter sets;
 - [x] Success encode & decode matrices in Zq;
-- [x] Success pack & unpack matrices;
+- [ ] Success pack & unpack matrices;
 - [ ] Read all in specification;
-- [x] Sampling from the error distribution;
-- [x] Pseudorandom matrix generation using SHAKE128, SHAKE256;
+- [ ] Sampling from the error distribution;
+- [ ] Pseudorandom matrix generation using SHAKE128, SHAKE256;
 - [ ] IND-CPA-secure public-key encryption (PKE) scheme (encryption/decryption, key generation);
 - [ ] Transform from IND-CPA PKE to IND-CCA key encapsulation mechanism (KEM);
 - [ ] IND-CCA-secure key encapsulation mechanism (KEM);
 
 - [ ] Writing tests.
 
-## Math
+## Math & Implementations
 
 **Vectors and matrices over the ring.** The ring of integers Z for a positive integer q, the quotient ring of integers modulo q is denoted by Zq = Z/qZ.
+
+**Realisation of matrices over the ring.** Matrix A (m*n) contains unsigned 16-bit numbers in big-endian order.
+
+**Realisation of bit-strings.** String s with bit length *len* contains unsigned 8-bit numbers in little-endian order.
 
 **Learning With Errors.** The security of PKE and KEM relies on the hardness of the Learning With Errors (LWE) problem. 
 
@@ -36,8 +40,6 @@
 
 :point_right: FrodoKEM specification [`papers`](https://github.com/mariiatuzovska/frodokem/blob/master/papers/FrodoKEM-specification-20190702.pdf);
 
-:point_right: Little-endian 16-bit-base strings [`util/bitstr`](https://github.com/mariiatuzovska/frodokem/blob/master/util/bitstr/bitstr.go);
-
 :point_right: Matrix encoding of bit strings [`frodo`](https://github.com/mariiatuzovska/frodokem/blob/master/frodo/frodo.go);
 
 :point_right: Selected parameter sets [`frodo`](https://github.com/mariiatuzovska/frodokem/blob/master/frodo/frodo.go);
@@ -47,6 +49,10 @@
 :point_right: SHAKE128 [`golang.org/x/crypto/sha3`](https://godoc.org/golang.org/x/crypto/sha3);
 
 :point_right: Generation of key pairs [`pke`](https://github.com/mariiatuzovska/frodokem/blob/master/frodo/pke.go);
+
+:point_right: Encryption bit strings into matrices [`pke`](https://github.com/mariiatuzovska/frodokem/blob/master/frodo/pke.go);
+
+:point_right: Decryption matrices into bit strings [`pke`](https://github.com/mariiatuzovska/frodokem/blob/master/frodo/pke.go);
 
 ## Advantages & Disadvantages of my implementation
 
@@ -102,6 +108,18 @@
 
         frodo640 := frodo.Frodo640()
         pk, sk := frodo640.KeyGen()
+
+        m := make([]byte, 128/8)
+	    for i := range m {
+	    	m[i] = byte(rand.Int())
+	    }
+	    fmt.Printf("%x\n", m)
+        
+	    c := frodo.Enc(m, pk)
+	    e := frodo.Dec(c, sk)
+
+	    fmt.Printf("%x\n", e)
+        fmt.Println("First and second string must be equal.")
         
     } 
 
