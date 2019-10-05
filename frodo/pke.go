@@ -35,6 +35,7 @@ func (param *Parameters) KeyGen() (pk *PublicKey, sk *SecretKey) {
 
 	pk, sk = new(PublicKey), new(SecretKey)
 	rLen := param.no * param.n * param.lenX / 4
+	pk.seedA = make([]byte, param.lseedA/8)
 	seedSE, r := make([]byte, (param.lseedSE/8)+1), make([]byte, rLen)
 
 	rand.Seed(time.Now().UTC().UnixNano())
@@ -80,7 +81,7 @@ func (param *Parameters) Enc(message []byte, pk *PublicKey) *CipherText {
 	seedSE := make([]byte, ((param.lseedSE / 8) + 1))
 	r := make([]byte, ((2*param.m*param.no+mn)*param.lenX)/8)
 
-	seedSE[0] = byte(0x96)
+	seedSE[0] = 0x96
 	rand.Seed(time.Now().UTC().UnixNano())
 	for i := 1; i < len(seedSE); i++ {
 		seedSE[i] = byte(rand.Int())
@@ -102,7 +103,7 @@ func (param *Parameters) Enc(message []byte, pk *PublicKey) *CipherText {
 		r1[i] = r[i]
 		r2[i] = r[rLen+i]
 	}
-	rLen *= 2
+	rLen += rLen
 	for i := range r3 {
 		r3[i] = r[rLen+i]
 	}
@@ -136,7 +137,7 @@ func (param *Parameters) mulMatrices(A, B [][]uint16) [][]uint16 {
 		for j := 0; j < len(B[0]); j++ {
 			temp := uint32(0)
 			for k := 0; k < len(A); k++ {
-				temp += uint32(A[i][k]) * uint32(B[k][j])
+				temp += (uint32(A[i][k]) * uint32(B[k][j])) % param.q
 				temp %= param.q
 			}
 			C[i][j] = uint16(temp)

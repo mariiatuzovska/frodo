@@ -66,10 +66,10 @@ func Frodo976() *Parameters {
 	param.m = 8
 	param.n = 8
 	param.lseedA = 128
-	param.lseedSE = 128
-	param.lenM = 128
+	param.lseedSE = 192
+	param.lenM = 192
 	param.lenX = 16
-	param.l = 128
+	param.l = 192
 	param.X = []uint16{5638, 15915, 23689, 28571, 31116, 32217, 32613, 32731, 32760, 32766, 32767}
 
 	return param
@@ -87,10 +87,10 @@ func Frodo1344() *Parameters {
 	param.m = 8
 	param.n = 8
 	param.lseedA = 128
-	param.lseedSE = 128
-	param.lenM = 128
+	param.lseedSE = 256
+	param.lenM = 256
 	param.lenX = 16
-	param.l = 128
+	param.l = 256
 	param.X = []uint16{9142, 23462, 30338, 32361, 32725, 32765, 32767}
 
 	return param
@@ -107,7 +107,7 @@ func (param *Parameters) Encode(k []byte) [][]uint16 {
 			for l := 0; l < param.B; l++ {
 				index, shift := ((i*param.n+j)*param.B+l)/8, uint(((i*param.n+j)*param.B+l)%8)
 				if k[index]&(byte(0x80)>>shift) != 0 { // litte-endian
-					temp |= uint16(1 << uint(l)) // big-endian
+					temp |= uint16(1 << uint(l))
 				}
 			}
 			K[i][j] = param.ec(temp)
@@ -122,7 +122,7 @@ func (param *Parameters) Decode(K [][]uint16) []byte {
 	k := make([]byte, param.l/8)
 	for i, row := range K {
 		for j := range row {
-			temp := param.dc(K[i][j]) // big-endian
+			temp := param.dc(K[i][j])
 			for l := 0; l < param.B; l++ {
 				if temp&uint16(1<<uint(l)) != 0 {
 					index, shift := ((i*param.n+j)*param.B+l)/8, uint(((i*param.n+j)*param.B+l)%8)
@@ -227,8 +227,8 @@ func (param *Parameters) SampleMatrix(r []byte, n1, n2 int) [][]uint16 {
 	E := make([][]uint16, n1)
 	for i := 0; i < n1; i++ {
 		E[i] = make([]uint16, n2)
-		for j := 0; j < n2; j++ {
-			index := (i*n2 + j) * 2
+		for j := 0; j < n2; j += 2 {
+			index := (i*n2 + j)
 			t := (uint16(r[index]) << 8) | uint16(r[index+1])
 			E[i][j] = param.Sample(t)
 		}
@@ -237,12 +237,12 @@ func (param *Parameters) SampleMatrix(r []byte, n1, n2 int) [][]uint16 {
 }
 
 func (param *Parameters) ec(k uint16) uint16 {
-	t := bits.RotateLeft16(1, param.D-param.B)
-	return t * k
+	t := uint16(1) << uint(param.D-param.B)
+	return uint16(uint32(t*k) % param.q)
 }
 
 func (param *Parameters) dc(c uint16) uint16 {
-	b, d := bits.RotateLeft16(1, param.B), bits.RotateLeft32(1, param.D-param.B)
+	b, d := uint16(1)<<uint(param.B), uint32(1)<<uint(param.D-param.B)
 	r, _ := bits.Div32(0, uint32(c), d)
 	return uint16(r) % b
 }
