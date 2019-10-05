@@ -129,3 +129,27 @@ func TextEncDec(t *testing.T) {
 		t.Fatal("input message do not corect encrypted/decrypted")
 	}
 }
+
+func TestSampleMatrix(t *testing.T) {
+
+	frodo := frodo.Frodo976()
+	m := make([]byte, 128)
+
+	rand.Seed(time.Now().UTC().UnixNano())
+	for i := range m {
+		m[i] = byte(rand.Int())
+	}
+
+	fmt.Printf("%x\n", m)
+
+	a := frodo.SampleMatrix(m, 8, 8)
+	b := frodo.SampleMatrix(m, 8, 8)
+
+	for i, row := range a {
+		for j := range row {
+			if a[i][j] != b[i][j] {
+				t.Fatal("Wrong work of Sample matrix")
+			}
+		}
+	}
+}

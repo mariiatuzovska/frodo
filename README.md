@@ -12,10 +12,10 @@
 
 - [x] Selected parameter sets;
 - [x] Success encode & decode matrices in Zq;
-- [ ] Success pack & unpack matrices;
+- [x] Success pack & unpack matrices;
 - [ ] Read all in specification;
-- [ ] Sampling from the error distribution;
-- [ ] Pseudorandom matrix generation using SHAKE128, SHAKE256;
+- [x] Sampling from the error distribution;
+- [x] Pseudorandom matrix generation using SHAKE128, SHAKE256;
 - [ ] IND-CPA-secure public-key encryption (PKE) scheme (encryption/decryption, key generation);
 - [ ] Transform from IND-CPA PKE to IND-CCA key encapsulation mechanism (KEM);
 - [ ] IND-CCA-secure key encapsulation mechanism (KEM);
@@ -26,9 +26,9 @@
 
 **Vectors and matrices over the ring.** The ring of integers Z for a positive integer q, the quotient ring of integers modulo q is denoted by Zq = Z/qZ.
 
-**Realisation of matrices over the ring.** Matrix A (m*n) contains unsigned 16-bit numbers in big-endian order.
+**Realisation of matrices over the ring.** Matrix A (m*n) contains unsigned 16-bit numbers in ring of integers modulo q.
 
-**Realisation of bit-strings.** String s with bit length *len* contains unsigned 8-bit numbers in little-endian order.
+**Realisation of bit-strings.** Bit string *s* with length *len* realised like []byte slice with length *(len / 8)* in little-endian order.
 
 **Learning With Errors.** The security of PKE and KEM relies on the hardness of the Learning With Errors (LWE) problem. 
 
@@ -60,9 +60,7 @@
 
 :poop: It is hard mathematical task to get the parameters;
 
-:poop: Not good implementation of bit-sequences, maybe will be better in time;
-
-:heart_eyes_cat: Pretty native Golang.
+:heart_eyes_cat: Pretty native Golang: using best practices of language.
 
 ## Inspiration
 
@@ -119,7 +117,7 @@
 	    e := frodo.Dec(c, sk)
 
 	    fmt.Printf("%x\n", e)
-        fmt.Println("First and second string must be equal.")
+        fmt.Println("First and second string must be equal. You've got it, aren't you?")
         
     } 
 
@@ -130,5 +128,9 @@
 ```
             $ go run frodo.go
 ```
+## Difficulties, that I've completed on a given task
+
+:scream_cat: Very long time failed to implement the right Enc & Dec functions, because of hardness to understand how works LWE.
+
 
 ![](https://github.com/mariiatuzovska/frodokem/blob/master/img/gopher.png)

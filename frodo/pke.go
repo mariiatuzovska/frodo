@@ -114,16 +114,17 @@ func (param *Parameters) Enc(message []byte, pk *PublicKey) *CipherText {
 	V := param.sumMatrices(param.mulMatrices(S1, pk.B), E2)
 
 	cipher := new(CipherText)
-	cipher.C1 = param.sumMatrices(param.mulMatrices(S1, A), E1)
-	cipher.C2 = param.sumMatrices(V, param.Encode(message))
+	cipher.C1 = param.sumMatrices(param.mulMatrices(S1, A), E1) // C1 = S1*A + E1
+	cipher.C2 = param.sumMatrices(V, param.Encode(message))     // C2 = V + M = S1*B + E2 + M = S1*A*S + S1E + E2 + M
 
 	return cipher
 }
 
 // Dec return decrypted with secret key cihertext
+// with error S1*E + E2 − E1*S.
 func (param *Parameters) Dec(cipher *CipherText, sk *SecretKey) []byte {
 
-	M := param.subMatrices(cipher.C2, param.mulMatrices(cipher.C1, sk.S))
+	M := param.subMatrices(cipher.C2, param.mulMatrices(cipher.C1, sk.S)) // M = C2 - C1*S = Enc(message) + S1*E + E2 - E1*S
 	message := param.Decode(M)
 	return message
 }
