@@ -1,6 +1,7 @@
 package frodo
 
 import (
+	"fmt"
 	"math/rand"
 	"time"
 
@@ -68,8 +69,7 @@ func (param *Parameters) KeyGen() (pk *PublicKey, sk *SecretKey) {
 	A := param.Gen(pk.seedA)
 	sk.S = param.SampleMatrix(r1, param.no, param.n)
 	E := param.SampleMatrix(r2, param.no, param.n)
-	AS := param.mulMatrices(A, sk.S)
-	pk.B = param.sumMatrices(AS, E)
+	pk.B = param.mulAddMatrices(A, sk.S, E)
 
 	return
 }
@@ -111,11 +111,11 @@ func (param *Parameters) Enc(message []byte, pk *PublicKey) *CipherText {
 	S1 := param.SampleMatrix(r1, param.m, param.no)
 	E1 := param.SampleMatrix(r2, param.m, param.no)
 	E2 := param.SampleMatrix(r3, param.m, param.n)
-	V := param.sumMatrices(param.mulMatrices(S1, pk.B), E2)
+	V := param.mulAddMatrices(S1, pk.B, E2)
 
 	cipher := new(CipherText)
-	cipher.C1 = param.sumMatrices(param.mulMatrices(S1, A), E1) // C1 = S1*A + E1
-	cipher.C2 = param.sumMatrices(V, param.Encode(message))     // C2 = V + M = S1*B + E2 + M = S1*A*S + S1E + E2 + M
+	cipher.C1 = param.mulAddMatrices(S1, A, E1)             // C1 = S1*A + E1
+	cipher.C2 = param.sumMatrices(V, param.Encode(message)) // C2 = V + M = S1*B + E2 + M = S1*A*S + S1E + E2 + M
 
 	return cipher
 }
@@ -125,6 +125,12 @@ func (param *Parameters) Enc(message []byte, pk *PublicKey) *CipherText {
 func (param *Parameters) Dec(cipher *CipherText, sk *SecretKey) []byte {
 
 	M := param.subMatrices(cipher.C2, param.mulMatrices(cipher.C1, sk.S)) // M = C2 - C1*S = Enc(message) + S1*E + E2 - E1*S
+	fmt.Println("C2")
+	fmt.Printf("%x\n\n", cipher.C2)
+	fmt.Println("C1*S")
+	fmt.Printf("%x\n\n", param.mulMatrices(cipher.C1, sk.S))
+	fmt.Println("C2 - C1*S")
+	fmt.Printf("%x\n\n", M)
 	message := param.Decode(M)
 	return message
 }
@@ -136,12 +142,31 @@ func (param *Parameters) mulMatrices(A, B [][]uint16) [][]uint16 {
 	for i := 0; i < len(A); i++ {
 		C[i] = make([]uint16, len(B[0]))
 		for j := 0; j < len(B[0]); j++ {
-			temp := uint32(0)
-			for k := 0; k < len(A); k++ {
-				temp += (uint32(A[i][k]) * uint32(B[k][j])) % param.q
-				temp %= param.q
-			}
-			C[i][j] = uint16(temp)
+			// temp := uint32(0)
+			// for k := 0; k < len(A); k++ {
+			// 	temp += (uint32(A[i][k]) * uint32(B[k][j])) % param.q
+			// 	temp %= param.q
+			// }
+			// C[i][j] = uint16(temp)
+			C[i][j] = uint16((uint32(A[i][j]) * uint32(B[i][j])) % param.q)
+		}
+	}
+	return C
+}
+
+func (param *Parameters) mulAddMatrices(A, B, E [][]uint16) [][]uint16 {
+
+	C := make([][]uint16, len(A))
+	for i := 0; i < len(A); i++ {
+		C[i] = make([]uint16, len(B[0]))
+		for j := 0; j < len(B[0]); j++ {
+			// temp := uint32(E[i][j])
+			// for k := 0; k < len(A); k++ {
+			// 	temp += (uint32(A[i][k]) * uint32(B[k][j])) % param.q
+			// 	temp %= param.q
+			// }
+			// C[i][j] = uint16(temp)
+			C[i][j] = uint16((uint32(A[i][j]) * uint32(B[i][j])) % param.q)
 		}
 	}
 	return C

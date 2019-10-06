@@ -224,11 +224,16 @@ func (param *Parameters) Gen(seed []byte) [][]uint16 {
 // Sample returns a sample e from the distribution χ
 func (param *Parameters) Sample(r uint16) uint16 {
 
-	e, t, sign := uint16(0), r>>1, r&1
+	e, t, sign := uint32(0), r>>1, r&1
 	for z := 0; z < len(param.X)-1; z++ {
-		e += (param.X[z] - t) >> 15
+		if t > param.X[z] {
+			e++
+		}
 	}
-	return (e ^ (-sign)) + sign
+	if sign != 0 {
+		e = (param.q - e) % param.q
+	}
+	return uint16(e)
 }
 
 // SampleMatrix sample the n1 * n2 matrix entry
