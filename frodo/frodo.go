@@ -2,7 +2,6 @@ package frodo
 
 import (
 	"log"
-	"math/bits"
 
 	"golang.org/x/crypto/sha3"
 )
@@ -21,7 +20,7 @@ type Frodo interface {
 // Parameters of frodo KEM mechanism
 type Parameters struct {
 	no      int      // n ≡ 0 (mod 8) the main parameter
-	q       uint32   // a power-of-two integer modulus with exponent D ≤ 16
+	q       uint16   // a power-of-two integer modulus with exponent D ≤ 16 minus one
 	D       int      // a power
 	m, n    int      // integer matrix dimensions with
 	B       int      // the number of bits encoded in each matrix entry
@@ -44,7 +43,7 @@ func Frodo640() *Parameters {
 	param := new(Parameters)
 
 	param.no = 640
-	param.q = 32768
+	param.q = 0xfff
 	param.D = 15
 	param.B = 2
 	param.m = 8
@@ -70,7 +69,7 @@ func Frodo976() *Parameters {
 	param := new(Parameters)
 
 	param.no = 976
-	param.q = 65536
+	param.q = 0xffff
 	param.D = 16
 	param.B = 3
 	param.m = 8
@@ -96,7 +95,7 @@ func Frodo1344() *Parameters {
 	param := new(Parameters)
 
 	param.no = 1344
-	param.q = 65536
+	param.q = 0xffff
 	param.D = 16
 	param.B = 4
 	param.m = 8
@@ -125,7 +124,7 @@ func (param *Parameters) Encode(k []byte) [][]uint16 {
 		for j := range K[i] {
 			temp := uint16(0)
 			for l := 0; l < param.B; l++ {
-				index, shift := ((i*param.n+j)*param.B+l)/8, uint(((i*param.n+j)*param.B+l)%8)
+				index, shift := ((i*param.n+j)*param.B+l)/8, uint(((i*param.n+j)*param.B+l)&7)
 				if k[index]&(byte(0x80)>>shift) != 0 { // litte-endian
 					temp |= uint16(1 << uint(l))
 				}
@@ -145,7 +144,7 @@ func (param *Parameters) Decode(K [][]uint16) []byte {
 			temp := param.dc(K[i][j])
 			for l := 0; l < param.B; l++ {
 				if temp&uint16(1<<uint(l)) != 0 {
-					index, shift := ((i*param.n+j)*param.B+l)/8, uint(((i*param.n+j)*param.B+l)%8)
+					index, shift := ((i*param.n+j)*param.B+l)/8, uint(((i*param.n+j)*param.B+l)&7)
 					k[index] |= byte(0x80) >> shift // litte-endian
 				}
 			}
@@ -163,7 +162,7 @@ func (param *Parameters) Pack(C [][]uint16) []byte {
 		for j := 0; j < n2; j++ {
 			for l := 0; l < param.D; l++ {
 				if (uint16(1)<<uint(param.D-1-l))&C[i][j] != 0 {
-					index, shift := ((i*n2+j)*param.D+l)/8, uint(((i*n2+j)*param.D+l)%8)
+					index, shift := ((i*n2+j)*param.D+l)/8, uint(((i*n2+j)*param.D+l)&7)
 					b[index] |= byte(0x80) >> shift
 				}
 			}
@@ -180,7 +179,7 @@ func (param *Parameters) Unpack(b []byte, n1, n2 int) [][]uint16 {
 		C[i] = make([]uint16, n2)
 		for j := range C[i] {
 			for l := 0; l < param.D; l++ {
-				index, shift := ((i*n2+j)*param.D+l)/8, uint(((i*n2+j)*param.D+l)%8)
+				index, shift := ((i*n2+j)*param.D+l)/8, uint(((i*n2+j)*param.D+l)&7)
 				if b[index]&byte(0x80>>shift) != 0 {
 					C[i][j] |= uint16(1) << uint(param.D-1-l)
 				}
@@ -214,7 +213,7 @@ func (param *Parameters) Gen(seed []byte) [][]uint16 {
 
 		A[i] = make([]uint16, param.no)
 		for j := 0; j < param.no; j++ {
-			A[i][j] = uint16(uint32((uint16(shakeStr[j*2])<<8)|uint16(shakeStr[i*2+1])) % param.q)
+			A[i][j] = ((uint16(shakeStr[j*2]) << 8) | uint16(shakeStr[i*2+1])) & param.q
 		}
 	}
 
@@ -224,16 +223,13 @@ func (param *Parameters) Gen(seed []byte) [][]uint16 {
 // Sample returns a sample e from the distribution χ
 func (param *Parameters) Sample(r uint16) uint16 {
 
-	e, t, sign := uint32(0), r>>1, r&1
+	e, t, sign := uint16(0), r>>1, r&1
 	for z := 0; z < len(param.X)-1; z++ {
 		if t > param.X[z] {
 			e++
 		}
 	}
-	if sign != 0 {
-		e = (param.q - e) % param.q
-	}
-	return uint16(e)
+	return (e ^ (-sign)) + sign
 }
 
 // SampleMatrix sample the n1 * n2 matrix entry
@@ -255,11 +251,10 @@ func (param *Parameters) SampleMatrix(r []byte, n1, n2 int) [][]uint16 {
 
 func (param *Parameters) ec(k uint16) uint16 {
 	t := uint16(1) << uint(param.D-param.B)
-	return uint16(uint32(t*k) % param.q)
+	return uint16(t*k) & param.q
 }
 
 func (param *Parameters) dc(c uint16) uint16 {
-	b, d := uint16(1)<<uint(param.B), uint32(1)<<uint(param.D-param.B)
-	r, _ := bits.Div32(0, uint32(c), d)
-	return uint16(r) % b
+	b, d := uint16(1)<<uint(param.B), uint16(1)<<uint(param.D-param.B)
+	return uint16(c/d) % b
 }
