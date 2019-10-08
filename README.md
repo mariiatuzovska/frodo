@@ -8,7 +8,7 @@
 
 ![](https://github.com/mariiatuzovska/frodokem/blob/master/img/frodo.jpg)
 
-## Progress 10%
+## Progress 60%
 
 - [x] Selected parameter sets;
 - [x] Success encode & decode matrices in Zq;
@@ -16,11 +16,12 @@
 - [ ] Read all in specification;
 - [x] Sampling from the error distribution;
 - [x] Pseudorandom matrix generation using SHAKE128, SHAKE256;
-- [ ] IND-CPA-secure public-key encryption (PKE) scheme (encryption/decryption, key generation);
+- [x] IND-CPA-secure public-key encryption (PKE) scheme (encryption/decryption, key generation);
 - [ ] Transform from IND-CPA PKE to IND-CCA key encapsulation mechanism (KEM);
 - [ ] IND-CCA-secure key encapsulation mechanism (KEM);
 
-- [ ] Writing tests.
+- [ ] Writing tests;
+- [ ] Optimising computational process.
 
 ## Math & Implementations
 
@@ -40,7 +41,7 @@
 
 :point_right: FrodoKEM specification [`papers`](https://github.com/mariiatuzovska/frodokem/blob/master/papers/FrodoKEM-specification-20190702.pdf);
 
-:point_right: Matrix encoding of bit strings [`frodo`](https://github.com/mariiatuzovska/frodokem/blob/master/frodo/frodo.go);
+:point_right: Matrix encoding of bit strings (decoding) [`frodo`](https://github.com/mariiatuzovska/frodokem/blob/master/frodo/frodo.go);
 
 :point_right: Selected parameter sets [`frodo`](https://github.com/mariiatuzovska/frodokem/blob/master/frodo/frodo.go);
 
@@ -50,9 +51,9 @@
 
 :point_right: Generation of key pairs [`pke`](https://github.com/mariiatuzovska/frodokem/blob/master/frodo/pke.go);
 
-:point_right: Encryption bit strings into matrices [`pke`](https://github.com/mariiatuzovska/frodokem/blob/master/frodo/pke.go);
+:point_right: Encryption plain texts [`pke`](https://github.com/mariiatuzovska/frodokem/blob/master/frodo/pke.go);
 
-:point_right: Decryption matrices into bit strings [`pke`](https://github.com/mariiatuzovska/frodokem/blob/master/frodo/pke.go);
+:point_right: Decryption cipher texts [`pke`](https://github.com/mariiatuzovska/frodokem/blob/master/frodo/pke.go);
 
 ## Advantages & Disadvantages of my implementation
 
@@ -60,7 +61,9 @@
 
 :poop: It is hard mathematical task to get the parameters;
 
-:heart_eyes_cat: Pretty native Golang: using best practices of language.
+:heart_eyes_cat: Pretty native Golang: using best practices of language,
+
+:space_invader: Writtem tests.
 
 ## Inspiration
 
@@ -128,9 +131,5 @@
 ```
             $ go run frodo.go
 ```
-## Difficulties, that I've completed on a given task
-
-:scream_cat: Very long time failed to implement the right Enc & Dec functions, because of hardness to understand how works LWE.
-
 
 ![](https://github.com/mariiatuzovska/frodokem/blob/master/img/gopher.png)

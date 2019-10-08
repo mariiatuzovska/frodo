@@ -142,8 +142,8 @@ func (param *Parameters) mulMatrices(A, B [][]uint16) [][]uint16 {
 		C[i] = make([]uint16, len(B[0]))
 		for j := 0; j < len(B[0]); j++ {
 			for k := 0; k < len(A); k++ {
-				sum, _ := bits.Mul32(uint32(A[i][k]), uint32(B[k][j]))
-				C[i][j] += uint16(sum)
+				mul, _ := bits.Mul32(uint32(A[i][k]), uint32(B[k][j]))
+				C[i][j] += uint16(mul) & param.q
 				C[i][j] &= param.q
 			}
 		}
@@ -159,8 +159,8 @@ func (param *Parameters) mulAddMatrices(A, B, E [][]uint16) [][]uint16 {
 		for j := 0; j < len(B[0]); j++ {
 			C[i][j] = E[i][j]
 			for k := 0; k < len(A); k++ {
-				sum, _ := bits.Mul32(uint32(A[i][k]), uint32(B[k][j]))
-				C[i][j] += uint16(sum)
+				mul, _ := bits.Mul32(uint32(A[i][k]), uint32(B[k][j]))
+				C[i][j] += uint16(mul) & param.q
 				C[i][j] &= param.q
 			}
 		}
@@ -187,10 +187,14 @@ func (param *Parameters) subMatrices(A, B [][]uint16) [][]uint16 { // for symmet
 	for i := 0; i < len(A); i++ {
 		C[i] = make([]uint16, len(A[0]))
 		for j := 0; j < len(A[0]); j++ {
-			r, _ := bits.Add32(uint32(param.q)+1, uint32(A[i][j]), 0)
-			diff, _ := bits.Sub32(r, uint32(B[i][j]), 0)
-			C[i][j] = uint16(diff) & param.q
-			//C[i][j] = (param.q - B[i][j] + A[i][j] + 1) & param.q
+			if A[i][j] >= B[i][j] {
+				diff, _ := bits.Sub32(uint32(A[i][j]), uint32(B[i][j]), 0)
+				C[i][j] = uint16(diff) & param.q
+			} else {
+				diff, _ := bits.Sub32(uint32(B[i][j]), uint32(B[i][j]), 0)
+				C[i][j] = (param.q - (uint16(diff) & param.q) + 1) & param.q
+			}
+			C[i][j] = (param.q - B[i][j] + A[i][j] + 1) & param.q
 		}
 	}
 	return C

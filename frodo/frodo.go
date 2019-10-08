@@ -2,6 +2,7 @@ package frodo
 
 import (
 	"log"
+	"math"
 
 	"golang.org/x/crypto/sha3"
 )
@@ -255,6 +256,7 @@ func (param *Parameters) ec(k uint16) uint16 {
 }
 
 func (param *Parameters) dc(c uint16) uint16 {
-	b, d := uint16(1)<<uint(param.B), uint16(1)<<uint(param.D-param.B)
-	return uint16(c/d) % b
+	b, d := uint16(1)<<uint(param.B), uint32(1)<<uint(param.D-param.B)
+	r := float64(c) / float64(d)
+	return uint16(math.Round(r*100)/100) & (b - 1)
 }
