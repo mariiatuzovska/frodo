@@ -62,7 +62,7 @@
 
 :heart_eyes_cat: Pretty native Golang: using best practices of language,
 
-:space_invader: Writtem tests.
+:space_invader: Written tests (soon).
 
 ## Inspiration
 
@@ -116,4 +116,4 @@
 
 ```
 
-![](https://github.com/mariiatuzovska/frodokem/blob/master/img/kem.png)
+![](https://github.com/mariiatuzovska/frodokem/blob/master/img/kem.jpg)
