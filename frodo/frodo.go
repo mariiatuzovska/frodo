@@ -39,30 +39,30 @@ type Parameters struct {
 }
 
 // Frodo640 returns Parameters struct no.640
-func Frodo640() *Parameters {
+// func Frodo640() *Parameters {
 
-	param := new(Parameters)
+// 	param := new(Parameters)
 
-	param.no = 640
-	param.q = 0xfff
-	param.D = 15
-	param.B = 2
-	param.m = 8
-	param.n = 8
-	param.lseedA = 128
-	param.lseedSE = 128
-	param.lenM = 128
-	param.lens = 128
-	param.lenk = 128
-	param.lenz = 128
-	param.lenpkh = 128
-	param.lenss = 128
-	param.lenX = 16
-	param.l = 128
-	param.X = []uint16{4643, 13363, 20579, 25843, 29227, 31145, 32103, 32525, 32689, 32745, 32762, 32766, 32767}
+// 	param.no = 640
+// 	param.q = 0xfff
+// 	param.D = 15
+// 	param.B = 2
+// 	param.m = 8
+// 	param.n = 8
+// 	param.lseedA = 128
+// 	param.lseedSE = 128
+// 	param.lenM = 128
+// 	param.lens = 128
+// 	param.lenk = 128
+// 	param.lenz = 128
+// 	param.lenpkh = 128
+// 	param.lenss = 128
+// 	param.lenX = 16
+// 	param.l = 128
+// 	param.X = []uint16{4643, 13363, 20579, 25843, 29227, 31145, 32103, 32525, 32689, 32745, 32762, 32766, 32767}
 
-	return param
-}
+// 	return param
+// }
 
 // Frodo976 returns Parameters struct no.976
 func Frodo976() *Parameters {

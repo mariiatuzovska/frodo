@@ -8,7 +8,7 @@
 
 ![](https://github.com/mariiatuzovska/frodokem/blob/master/img/frodo.jpg)
 
-## Progress 60%
+## Progress 70%
 
 - [x] Selected parameter sets;
 - [x] Success encode & decode matrices in Zq;
@@ -17,7 +17,6 @@
 - [x] Sampling from the error distribution;
 - [x] Pseudorandom matrix generation using SHAKE128, SHAKE256;
 - [x] IND-CPA-secure public-key encryption (PKE) scheme (encryption/decryption, key generation);
-- [ ] Transform from IND-CPA PKE to IND-CCA key encapsulation mechanism (KEM);
 - [ ] IND-CCA-secure key encapsulation mechanism (KEM);
 
 - [ ] Writing tests;
@@ -43,17 +42,17 @@
 
 :point_right: Matrix encoding of bit strings (decoding) [`frodo`](https://github.com/mariiatuzovska/frodokem/blob/master/frodo/frodo.go);
 
-:point_right: Selected parameter sets [`frodo`](https://github.com/mariiatuzovska/frodokem/blob/master/frodo/frodo.go);
-
-:point_right: Deterministic random bit generation using SHAKE128 [`frodo`](https://github.com/mariiatuzovska/frodokem/blob/master/frodo/frodo.go);
+:point_right: Deterministic random bit generation & pseudorandom matrix generation using SHAKE128 [`frodo`](https://github.com/mariiatuzovska/frodokem/blob/master/frodo/frodo.go);
 
 :point_right: SHAKE128 [`golang.org/x/crypto/sha3`](https://godoc.org/golang.org/x/crypto/sha3);
 
-:point_right: Generation of key pairs [`pke`](https://github.com/mariiatuzovska/frodokem/blob/master/frodo/pke.go);
+:point_right: Selected parameter sets [`frodo`](https://github.com/mariiatuzovska/frodokem/blob/master/frodo/frodo.go);
 
-:point_right: Encryption plain texts [`pke`](https://github.com/mariiatuzovska/frodokem/blob/master/frodo/pke.go);
+:point_right: Sampling from the error distribution [`frodo`](https://github.com/mariiatuzovska/frodokem/blob/master/frodo/frodo.go);
 
-:point_right: Decryption cipher texts [`pke`](https://github.com/mariiatuzovska/frodokem/blob/master/frodo/pke.go);
+:point_right: IND-CPA-secure public-key encryption scheme [`pke`](https://github.com/mariiatuzovska/frodokem/blob/master/frodo/pke.go);
+
+:point_right: IND-CCA-secure key encapsulation mechanism [`kem`](https://github.com/mariiatuzovska/frodokem/blob/master/frodo/kem.go);
 
 ## Advantages & Disadvantages of my implementation
 
@@ -88,13 +87,9 @@
             $ go get "golang.org/x/crypto"
 ```
 
-3. create frodo.go in your GOPATH package
+## Example
 
-```
-            $ touch frodo.go
-```
-
-4. follow this code to check current work of library
+### Encryption & Decryption 
 
 ```
     package main
@@ -108,28 +103,17 @@
     func main() {
 
         frodo640 := frodo.Frodo640()
-        pk, sk := frodo640.KeyGen()
+        pk, sk := frodo976.KeyGen()
 
-        m := make([]byte, 128/8)
-	    for i := range m {
-	    	m[i] = byte(rand.Int())
-	    }
-	    fmt.Printf("%x\n", m)
+        m := []byte("This is my pure frodo976")
         
-	    c := frodo.Enc(m, pk)
-	    e := frodo.Dec(c, sk)
+	    ct := frodo.Enc(m, pk)
+	    pt := frodo.Dec(ct, sk)
 
-	    fmt.Printf("%x\n", e)
-        fmt.Println("First and second string must be equal. You've got it, aren't you?")
+	    fmt.Printf(string(pt))
         
     } 
 
 ```
 
-5. run the program
-
-```
-            $ go run frodo.go
-```
-
-![](https://github.com/mariiatuzovska/frodokem/blob/master/img/gopher.png)
+![](https://github.com/mariiatuzovska/frodokem/blob/master/img/kem.png)
