@@ -2,7 +2,6 @@ package frodo
 
 import (
 	"log"
-	"math"
 
 	"golang.org/x/crypto/sha3"
 )
@@ -39,30 +38,30 @@ type Parameters struct {
 }
 
 // Frodo640 returns Parameters struct no.640
-// func Frodo640() *Parameters {
+func Frodo640() *Parameters {
 
-// 	param := new(Parameters)
+	param := new(Parameters)
 
-// 	param.no = 640
-// 	param.q = 0xfff
-// 	param.D = 15
-// 	param.B = 2
-// 	param.m = 8
-// 	param.n = 8
-// 	param.lseedA = 128
-// 	param.lseedSE = 128
-// 	param.lenM = 128
-// 	param.lens = 128
-// 	param.lenk = 128
-// 	param.lenz = 128
-// 	param.lenpkh = 128
-// 	param.lenss = 128
-// 	param.lenX = 16
-// 	param.l = 128
-// 	param.X = []uint16{4643, 13363, 20579, 25843, 29227, 31145, 32103, 32525, 32689, 32745, 32762, 32766, 32767}
+	param.no = 640
+	param.q = 0xfff
+	param.D = 15
+	param.B = 2
+	param.m = 8
+	param.n = 8
+	param.lseedA = 128
+	param.lseedSE = 128
+	param.lenM = 128
+	param.lens = 128
+	param.lenk = 128
+	param.lenz = 128
+	param.lenpkh = 128
+	param.lenss = 128
+	param.lenX = 16
+	param.l = 128
+	param.X = []uint16{4643, 13363, 20579, 25843, 29227, 31145, 32103, 32525, 32689, 32745, 32762, 32766, 32767}
 
-// 	return param
-// }
+	return param
+}
 
 // Frodo976 returns Parameters struct no.976
 func Frodo976() *Parameters {
@@ -230,7 +229,10 @@ func (param *Parameters) Sample(r uint16) uint16 {
 			e++
 		}
 	}
-	return (e ^ (-sign)) + sign
+	if r*sign != 0 && e != 0 {
+		e = (param.q - e + 1)
+	}
+	return e
 }
 
 // SampleMatrix sample the n1 * n2 matrix entry
@@ -248,15 +250,4 @@ func (param *Parameters) SampleMatrix(r []byte, n1, n2 int) [][]uint16 {
 		}
 	}
 	return E
-}
-
-func (param *Parameters) ec(k uint16) uint16 {
-	t := uint16(1) << uint(param.D-param.B)
-	return uint16(t*k) & param.q
-}
-
-func (param *Parameters) dc(c uint16) uint16 {
-	b, d := uint16(1)<<uint(param.B), uint32(1)<<uint(param.D-param.B)
-	r := float64(c) / float64(d)
-	return uint16(math.Round(r*100)/100) & (b - 1)
 }

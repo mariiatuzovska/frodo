@@ -127,7 +127,9 @@ func (param *Parameters) Enc(message []byte, pk *PublicKey) *CipherText {
 func (param *Parameters) Dec(cipher *CipherText, sk *SecretKey) []byte {
 
 	M := param.subMatrices(cipher.C2, param.mulMatrices(cipher.C1, sk.S)) // M = C2 - C1*S = Enc(message) + S1*E + E2 - E1*S
-	fmt.Println("C2 - C1")
+	fmt.Println("C1*S")
+	fmt.Printf("%x\n\n", param.mulMatrices(cipher.C1, sk.S))
+	fmt.Println("C2 - C1*S")
 	fmt.Printf("%x\n\n", M)
 	message := param.Decode(M)
 	return message

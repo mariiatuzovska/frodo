@@ -8,7 +8,7 @@
 
 ![](https://github.com/mariiatuzovska/frodokem/blob/master/img/frodo.jpg)
 
-## Progress 70%
+## Progress 40%
 
 - [x] Selected parameter sets;
 - [x] Success encode & decode matrices in Zq;
@@ -16,7 +16,7 @@
 - [ ] Read all in specification;
 - [x] Sampling from the error distribution;
 - [x] Pseudorandom matrix generation using SHAKE128, SHAKE256;
-- [x] IND-CPA-secure public-key encryption (PKE) scheme (encryption/decryption, key generation);
+- [ ] IND-CPA-secure public-key encryption (PKE) scheme (encryption/decryption, key generation);
 - [ ] IND-CCA-secure key encapsulation mechanism (KEM);
 
 - [ ] Writing tests;
@@ -62,7 +62,7 @@
 
 :heart_eyes_cat: Pretty native Golang: using best practices of language,
 
-:space_invader: Writtem tests.
+:space_invader: Written tests (soon).
 
 ## Inspiration
 
@@ -116,4 +116,4 @@
 
 ```
 
-![](https://github.com/mariiatuzovska/frodokem/blob/master/img/kem.png)
+![](https://github.com/mariiatuzovska/frodokem/blob/master/img/kem.jpg)
