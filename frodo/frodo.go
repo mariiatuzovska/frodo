@@ -1,8 +1,6 @@
 package frodo
 
 import (
-	"log"
-
 	"golang.org/x/crypto/sha3"
 )
 
@@ -43,7 +41,7 @@ func Frodo640() *Parameters {
 	param := new(Parameters)
 
 	param.no = 640
-	param.q = 0xfff
+	param.q = 0x7fff
 	param.D = 15
 	param.B = 2
 	param.m = 8
@@ -223,13 +221,13 @@ func (param *Parameters) Gen(seed []byte) [][]uint16 {
 // Sample returns a sample e from the distribution χ
 func (param *Parameters) Sample(r uint16) uint16 {
 
-	e, t, sign := uint16(0), r>>1, r&1
+	e, t := uint16(0), r>>1
 	for z := 0; z < len(param.X)-1; z++ {
 		if t > param.X[z] {
 			e++
 		}
 	}
-	if r*sign != 0 && e != 0 {
+	if r&1 != 0 && e != 0 {
 		e = (param.q - e + 1)
 	}
 	return e
@@ -238,9 +236,6 @@ func (param *Parameters) Sample(r uint16) uint16 {
 // SampleMatrix sample the n1 * n2 matrix entry
 func (param *Parameters) SampleMatrix(r []byte, n1, n2 int) [][]uint16 {
 
-	if len(r) != n1*n2*param.lenX/8 {
-		log.Fatal("Invalid input in SampleMatrix() frodo.go")
-	}
 	E := make([][]uint16, n1)
 	for i := 0; i < n1; i++ {
 		E[i] = make([]uint16, n2)

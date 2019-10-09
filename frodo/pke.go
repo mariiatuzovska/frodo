@@ -1,7 +1,6 @@
 package frodo
 
 import (
-	"fmt"
 	"math/rand"
 	"time"
 
@@ -80,7 +79,6 @@ func (param *Parameters) Enc(message []byte, pk *PublicKey) *CipherText {
 	A, mn := param.Gen(pk.seedA), param.n*param.m
 	seedSE := make([]byte, ((param.lseedSE / 8) + 1))
 	r := make([]byte, ((2*param.m*param.no+mn)*param.lenX)/8)
-
 	seedSE[0] = 0x96
 	rand.Seed(time.Now().UTC().UnixNano())
 	for i := 1; i < len(seedSE); i++ {
@@ -113,11 +111,9 @@ func (param *Parameters) Enc(message []byte, pk *PublicKey) *CipherText {
 	E2 := param.SampleMatrix(r3, param.m, param.n)
 	V := param.mulAddMatrices(S1, pk.B, E2)
 
-	M := param.Encode(message)
-
 	cipher := new(CipherText)
-	cipher.C1 = param.mulAddMatrices(S1, A, E1) // C1 = S1*A + E1
-	cipher.C2 = param.sumMatrices(V, M)         // C2 = V + M = S1*B + E2 + M = S1*A*S + S1*E + E2 + M
+	cipher.C1 = param.mulAddMatrices(S1, A, E1)             // C1 = S1*A + E1
+	cipher.C2 = param.sumMatrices(V, param.Encode(message)) // C2 = V + M = S1*B + E2 + M = S1*A*S + S1*E + E2 + M
 
 	return cipher
 }
@@ -127,10 +123,6 @@ func (param *Parameters) Enc(message []byte, pk *PublicKey) *CipherText {
 func (param *Parameters) Dec(cipher *CipherText, sk *SecretKey) []byte {
 
 	M := param.subMatrices(cipher.C2, param.mulMatrices(cipher.C1, sk.S)) // M = C2 - C1*S = Enc(message) + S1*E + E2 - E1*S
-	fmt.Println("C1*S")
-	fmt.Printf("%x\n\n", param.mulMatrices(cipher.C1, sk.S))
-	fmt.Println("C2 - C1*S")
-	fmt.Printf("%x\n\n", M)
 	message := param.Decode(M)
 	return message
 }

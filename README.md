@@ -8,7 +8,7 @@
 
 ![](https://github.com/mariiatuzovska/frodokem/blob/master/img/frodo.jpg)
 
-## Progress 40%
+## Progress 55%
 
 - [x] Selected parameter sets;
 - [x] Success encode & decode matrices in Zq;
@@ -16,7 +16,7 @@
 - [ ] Read all in specification;
 - [x] Sampling from the error distribution;
 - [x] Pseudorandom matrix generation using SHAKE128, SHAKE256;
-- [ ] IND-CPA-secure public-key encryption (PKE) scheme (encryption/decryption, key generation);
+- [x] IND-CPA-secure public-key encryption (PKE) scheme (encryption/decryption, key generation);
 - [ ] IND-CCA-secure key encapsulation mechanism (KEM);
 
 - [ ] Writing tests;
