@@ -8,7 +8,7 @@
 
 ![](https://github.com/mariiatuzovska/frodokem/blob/master/img/frodo.jpg)
 
-## Progress 55%
+## Progress 65%
 
 - [x] Selected parameter sets;
 - [x] Success encode & decode matrices in Zq;
@@ -54,15 +54,17 @@
 
 :point_right: IND-CCA-secure key encapsulation mechanism [`kem`](https://github.com/mariiatuzovska/frodokem/blob/master/frodo/kem.go);
 
+:point_right: Tests [`test`](https://github.com/mariiatuzovska/frodokem/blob/master/frodo/frodo_test.go);
+
 ## Advantages & Disadvantages of my implementation
 
 :ok_hand: You can add your custom parameters following code in function [`func Frodo640`](https://github.com/mariiatuzovska/frodokem/blob/master/frodo/frodo.go) (if you understand [main theory](https://github.com/mariiatuzovska/frodokem/blob/master/papers/FrodoKEM-specification-20190702.pdf)) and use them in any future work with FrodoKEM;
 
 :poop: It is hard mathematical task to get the parameters;
 
-:heart_eyes_cat: Pretty native Golang: using best practices of language,
+:heart_eyes_cat: Pretty native Golang: using best practices of language;
 
-:space_invader: Written tests (soon).
+:space_invader: Written tests.
 
 ## Inspiration
 
