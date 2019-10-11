@@ -25,11 +25,11 @@ type Parameters struct {
 	l       int      // B·m·n, the length of bit strings that are encoded as m-by-n matrices
 	lseedA  int      // the bit length of seeds used for pseudorandom matrix generation
 	lseedSE int      // the bit length of seeds used for pseudorandom bit generation for error sampling
-	lens    int      // the bit length of seeds used for generating key pairs
-	lenz    int      // the bit length of seeds used for generating key pairs
+	lens    int      // the bit length of seeds used for generating key pairs (KEM)
+	lenz    int      // the bit length of seeds used for generating key pairs (KEM)
 	lenk    int      // the bit length of seeds used for generating seedSE in Encaps (KEM)
-	lenpkh  int      // the bit length of seeds used for generating key pairs
-	lenss   int      // the bit length of seeds used for sharing secret ss
+	lenpkh  int      // the bit length of seeds used for generating key pairs (KEM)
+	lenss   int      // the bit length of seeds used for sharing secret ss (KEM)
 	lenX    int      // length of χ distribution
 	X       []uint16 // a probability distribution on Z, rounded Gaussian distribution
 	lenM    int      // bit length of message

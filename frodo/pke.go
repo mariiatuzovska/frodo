@@ -14,18 +14,18 @@ type PKE interface {
 	Dec(cipher *CipherText, sk *SecretKey) []byte // return decrypted with sekret key cihertext
 }
 
-// PublicKey internal structure
+// PublicKey structure
 type PublicKey struct {
 	seedA []byte     // uniform string
 	B     [][]uint16 // matrix є Zq
 }
 
-// SecretKey internal structure
+// SecretKey structure
 type SecretKey struct {
 	S [][]uint16 // matrix є Zq
 }
 
-// CipherText internal structure
+// CipherText structure
 type CipherText struct {
 	C1, C2 [][]uint16
 }
@@ -73,7 +73,7 @@ func (param *Parameters) KeyGen() (pk *PublicKey, sk *SecretKey) {
 	return
 }
 
-// Enc encrypts message for chosen parameters length
+// Enc encrypts message for chosen parameters
 func (param *Parameters) Enc(message []byte, pk *PublicKey) *CipherText {
 
 	A, mn := param.Gen(pk.seedA), param.n*param.m

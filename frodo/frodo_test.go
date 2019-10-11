@@ -1,11 +1,11 @@
-package frodo
+package frodo_test
 
 import (
 	"math/rand"
 	"testing"
 	"time"
 
-	"github.com/mariiatuzovska/webapp/frodokem/frodo"
+	"github.com/mariiatuzovska/frodokem/frodo"
 )
 
 func TestFrodo640(t *testing.T) {
@@ -33,7 +33,6 @@ func TestFrodo640(t *testing.T) {
 			}
 		}
 	}
-	return nil
 }
 
 func TestFrodo976(t *testing.T) {
@@ -61,7 +60,6 @@ func TestFrodo976(t *testing.T) {
 			}
 		}
 	}
-	return nil
 }
 
 func TestFrodo1344(t *testing.T) {
@@ -89,5 +87,4 @@ func TestFrodo1344(t *testing.T) {
 			}
 		}
 	}
-	return nil
 }

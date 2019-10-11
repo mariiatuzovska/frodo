@@ -8,7 +8,7 @@
 
 ![](https://github.com/mariiatuzovska/frodokem/blob/master/img/frodo.jpg)
 
-## Progress 65%
+## Progress 70%
 
 - [x] Selected parameter sets;
 - [x] Success encode & decode matrices in Zq;
