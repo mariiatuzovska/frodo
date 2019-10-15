@@ -1,9 +1,5 @@
 package frodo
 
-import (
-	"golang.org/x/crypto/sha3"
-)
-
 // Frodo interface
 type Frodo interface {
 	Encode(k []byte) [][]uint16                   // Encode encodes an integer 0 ≤ k < 2^B as an element in Zq by multiplying it by q/2B = 2^(D−B): ec(k) := k·q/2^B
@@ -199,15 +195,7 @@ func (param *Parameters) Gen(seed []byte) [][]uint16 {
 			b[k+2] = seed[k]
 		}
 
-		if param.no == 640 {
-			shake := sha3.NewShake128()
-			shake.Write(b)
-			shake.Read(shakeStr)
-		} else {
-			shake := sha3.NewShake256()
-			shake.Write(b)
-			shake.Read(shakeStr)
-		}
+		param.shake(b, shakeStr)
 
 		A[i] = make([]uint16, param.no)
 		for j := 0; j < param.no; j++ {

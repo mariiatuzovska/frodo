@@ -3,15 +3,13 @@ package frodo
 import (
 	"math/rand"
 	"time"
-
-	"golang.org/x/crypto/sha3"
 )
 
 // KEM interface containts encasulation of key pairs, ciphertexts
 type KEM interface {
-	KeyGen() (pk *EncapsPublicKey, sk *EncapsSecretKey)                // key pair encapsulation
-	Encaps(message []byte, pk *EncapsPublicKey) (ct *EncapsCipherText) // returns encapsulated ct
-	Decaps(ct *EncapsCipherText, sk *EncapsSecretKey) (message []byte) // return message
+	KeyGen() (pk *EncapsPublicKey, sk *EncapsSecretKey)                // returns encaps key pair
+	Encaps(message []byte, pk *EncapsPublicKey) (ct *EncapsCipherText) // returns encaps ct
+	Decaps(ct *EncapsCipherText, sk *EncapsSecretKey) (message []byte) // returns message
 }
 
 // EncapsPublicKey structure
@@ -57,21 +55,8 @@ func (param *Parameters) EncapsKeyGen() (pk *EncapsPublicKey, sk *EncapsSecretKe
 	}
 
 	seedSE[0] = 0x5f
-	if param.no == 640 {
-		shake := sha3.NewShake128()
-		shake.Write(z)
-		shake.Read(pk.seedA)
-		shake = sha3.NewShake128()
-		shake.Write(seedSE)
-		shake.Read(r)
-	} else {
-		shake := sha3.NewShake256()
-		shake.Write(z)
-		shake.Read(pk.seedA)
-		shake = sha3.NewShake256()
-		shake.Write(seedSE)
-		shake.Read(r)
-	}
+	param.shake(z, pk.seedA)
+	param.shake(seedSE, r)
 
 	rLen /= 2
 	r1, r2 := make([]byte, rLen), make([]byte, rLen)
@@ -95,15 +80,7 @@ func (param *Parameters) EncapsKeyGen() (pk *EncapsPublicKey, sk *EncapsSecretKe
 	}
 
 	sk.pkh = make([]byte, param.lenpkh/8)
-	if param.no == 640 {
-		shake := sha3.NewShake128()
-		shake.Write(pkh)
-		shake.Read(sk.pkh)
-	} else {
-		shake := sha3.NewShake256()
-		shake.Write(pkh)
-		shake.Read(sk.pkh)
-	}
+	param.shake(pkh, sk.pkh)
 
 	sk.seedA = pk.seedA
 	sk.b = pk.b
@@ -111,7 +88,7 @@ func (param *Parameters) EncapsKeyGen() (pk *EncapsPublicKey, sk *EncapsSecretKe
 	return
 }
 
-// Encaps returns
+// Encaps returns encaps ciphertext
 func (param *Parameters) Encaps(message []byte, pk *EncapsPublicKey) (ct *EncapsCipherText) {
 
 	ct = new(EncapsCipherText)
@@ -131,15 +108,7 @@ func (param *Parameters) Encaps(message []byte, pk *EncapsPublicKey) (ct *Encaps
 		temp[i+len(pk.seedA)] = pk.b[i]
 	}
 
-	if param.no == 640 {
-		shake := sha3.NewShake128()
-		shake.Write(temp)
-		shake.Read(pkh)
-	} else {
-		shake := sha3.NewShake256()
-		shake.Write(temp)
-		shake.Read(pkh)
-	}
+	param.shake(temp, pkh)
 
 	temp = make([]byte, len(pkh)+len(m))
 	for i := range pkh {
@@ -149,15 +118,7 @@ func (param *Parameters) Encaps(message []byte, pk *EncapsPublicKey) (ct *Encaps
 		temp[i+len(pkh)] = pkh[i]
 	}
 
-	if param.no == 640 {
-		shake := sha3.NewShake128()
-		shake.Write(temp)
-		shake.Read(seed)
-	} else {
-		shake := sha3.NewShake256()
-		shake.Write(temp)
-		shake.Read(seed)
-	}
+	param.shake(temp, seed)
 
 	seedSE[0] = 0x96
 	for i := 1; i < len(seedSE); i++ {
@@ -167,15 +128,7 @@ func (param *Parameters) Encaps(message []byte, pk *EncapsPublicKey) (ct *Encaps
 		k[i] = seed[len(seedSE)-1+1]
 	}
 
-	if param.no == 640 {
-		shake := sha3.NewShake128()
-		shake.Write(seedSE)
-		shake.Read(r)
-	} else {
-		shake := sha3.NewShake256()
-		shake.Write(seedSE)
-		shake.Read(r)
-	}
+	param.shake(seedSE, r)
 
 	r1, r2 := make([]byte, param.m*param.no*param.lenX/8), make([]byte, param.m*param.no*param.lenX/8)
 	r3 := make([]byte, param.m*param.n*param.lenX/8)
@@ -191,8 +144,10 @@ func (param *Parameters) Encaps(message []byte, pk *EncapsPublicKey) (ct *Encaps
 	S1 := param.SampleMatrix(r1, param.m, param.no)
 	E1 := param.SampleMatrix(r2, param.m, param.no)
 	E2 := param.SampleMatrix(r1, param.m, param.n)
+
 	A := param.Gen(pk.seedA)
 	B1 := param.mulAddMatrices(S1, A, E1)
+
 	B := param.Unpack(pk.b, param.no, param.n)
 	V := param.mulAddMatrices(S1, B, E2)
 	C := param.sumMatrices(V, param.Encode(m))
@@ -212,21 +167,13 @@ func (param *Parameters) Encaps(message []byte, pk *EncapsPublicKey) (ct *Encaps
 	}
 
 	ct.ss = make([]byte, param.lenss/8)
-	//param.shake(temp, ct.ss)
-	if param.no == 640 {
-		shake := sha3.NewShake128()
-		shake.Write(temp)
-		shake.Read(ct.ss)
-	} else {
-		shake := sha3.NewShake256()
-		shake.Write(temp)
-		shake.Read(ct.ss)
-	}
+	param.shake(temp, ct.ss)
 
 	return
 }
 
-func (param *Parameters) Decaps(ct *EncapsCipherText, sk *EncapsSecretKey) (message []byte) {
+// Decaps returns
+func (param *Parameters) Decaps(ct *EncapsCipherText, sk *EncapsSecretKey) (ss []byte) {
 
 	B1, C := param.Unpack(ct.c1, param.m, param.no), param.Unpack(ct.c2, param.m, param.n)
 	B1S := param.mulMatrices(B1, sk.S)
@@ -234,5 +181,74 @@ func (param *Parameters) Decaps(ct *EncapsCipherText, sk *EncapsSecretKey) (mess
 	M := param.subMatrices(C, B1S)
 	m := param.Decode(M)
 
-	pk := make([]byte)
+	temp, pkh := make([]byte, (param.lseedSE+param.lenk)/8), make([]byte, len(sk.pkh)+len(m))
+
+	for i := range sk.pkh {
+		pkh[i] = sk.pkh[i]
+	}
+	for i := range m {
+		pkh[len(sk.pkh)+i] = m[i]
+	}
+
+	param.shake(pkh, temp)
+
+	seedSE, r := make([]byte, (param.lseedSE/8)+1), make([]byte, (2*param.no+param.n)*param.m*param.lenX/8)
+	seedSE[0] = 0x96
+	for i := 1; i < len(seedSE); i++ {
+		seedSE[i] = pkh[i-1]
+	}
+
+	k1 := make([]byte, param.lenk/8)
+	for i := range k1 {
+		k1[i] = pkh[len(seedSE)-1+i]
+	}
+
+	param.shake(seedSE, r)
+
+	r1, r2 := make([]byte, param.no*param.m*param.lenX/8), make([]byte, param.no*param.m*param.lenX/8)
+	r3 := make([]byte, param.n*param.m*param.lenX/8)
+
+	S1 := param.SampleMatrix(r1, param.m, param.no)
+	E1 := param.SampleMatrix(r2, param.m, param.no)
+	E2 := param.SampleMatrix(r3, param.m, param.n)
+
+	A := param.Gen(sk.seedA)
+	B := param.Unpack(sk.b, param.no, param.n)
+
+	B2 := param.mulAddMatrices(S1, A, E1)
+	V := param.mulAddMatrices(S1, B, E2)
+	C1 := param.sumMatrices(V, param.Encode(m))
+
+	if eqMatrices(B1, B2) == true && eqMatrices(C, C1) == true {
+
+		temp = make([]byte, len(ct.c1)+len(ct.c2)+len(k1))
+		for i := range ct.c1 {
+			temp[i] = ct.c1[i]
+		}
+		for i := range ct.c2 {
+			temp[i+len(ct.c1)] = ct.c2[i]
+		}
+		for i := range k1 {
+			temp[i+len(ct.c1)+len(ct.c2)] = k1[i]
+		}
+
+	} else {
+
+		temp = make([]byte, len(ct.c1)+len(ct.c2)+len(sk.s))
+		for i := range ct.c1 {
+			temp[i] = ct.c1[i]
+		}
+		for i := range ct.c2 {
+			temp[i+len(ct.c1)] = ct.c2[i]
+		}
+		for i := range sk.s {
+			temp[i+len(ct.c1)+len(ct.c2)] = sk.s[i]
+		}
+
+	}
+
+	ss = make([]byte, param.lenss/8)
+	param.shake(temp, ss)
+
+	return
 }

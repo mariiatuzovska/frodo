@@ -2,6 +2,8 @@ package frodo
 
 import (
 	"math"
+
+	"golang.org/x/crypto/sha3"
 )
 
 func (param *Parameters) ec(k uint16) uint16 {
@@ -26,7 +28,7 @@ func (param *Parameters) shake(write, read []byte) {
 		shake.Write(write)
 		shake.Read(read)
 	}
-	
+
 }
 
 // A (n1*m1); B (n2*m2) => A * B = C (n1*m2)
@@ -85,4 +87,16 @@ func (param *Parameters) subMatrices(A, B [][]uint16) [][]uint16 { // for symmet
 		}
 	}
 	return C
+}
+
+func eqMatrices(A, B [][]uint16) bool {
+
+	for i := range A {
+		for j := range A[i] {
+			if A[i][j] != B[i][j] {
+				return false
+			}
+		}
+	}
+	return true
 }

@@ -3,8 +3,6 @@ package frodo
 import (
 	"math/rand"
 	"time"
-
-	"golang.org/x/crypto/sha3"
 )
 
 // PKE interface
@@ -48,15 +46,7 @@ func (param *Parameters) KeyGen() (pk *PublicKey, sk *SecretKey) {
 		seedSE[i] = byte(rand.Intn(256))
 	}
 
-	if param.no == 640 {
-		shake := sha3.NewShake128()
-		shake.Write(seedSE)
-		shake.Read(r)
-	} else {
-		shake := sha3.NewShake256()
-		shake.Write(seedSE)
-		shake.Read(r)
-	}
+	param.shake(seedSE, r)
 
 	rLen /= 2
 	r1, r2 := make([]byte, rLen), make([]byte, rLen)
@@ -85,15 +75,7 @@ func (param *Parameters) Enc(message []byte, pk *PublicKey) *CipherText {
 		seedSE[i] = byte(rand.Int())
 	}
 
-	if param.no == 640 {
-		shake := sha3.NewShake128()
-		shake.Write(seedSE)
-		shake.Read(r)
-	} else {
-		shake := sha3.NewShake256()
-		shake.Write(seedSE)
-		shake.Read(r)
-	}
+	param.shake(seedSE, r)
 
 	rLen := param.m * param.no * param.lenX / 8
 	r1, r2, r3 := make([]byte, rLen), make([]byte, rLen), make([]byte, mn*param.lenX/8)
@@ -124,5 +106,6 @@ func (param *Parameters) Dec(cipher *CipherText, sk *SecretKey) []byte {
 
 	M := param.subMatrices(cipher.C2, param.mulMatrices(cipher.C1, sk.S)) // M = C2 - C1*S = Enc(message) + S1*E + E2 - E1*S
 	message := param.Decode(M)
+
 	return message
 }
