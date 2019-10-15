@@ -15,6 +15,20 @@ func (param *Parameters) dc(c uint16) uint16 {
 	return uint16(math.Round(r)) & (b - 1)
 }
 
+func (param *Parameters) shake(write, read []byte) {
+
+	if param.no == 640 {
+		shake := sha3.NewShake128()
+		shake.Write(write)
+		shake.Read(read)
+	} else {
+		shake := sha3.NewShake256()
+		shake.Write(write)
+		shake.Read(read)
+	}
+	
+}
+
 // A (n1*m1); B (n2*m2) => A * B = C (n1*m2)
 func (param *Parameters) mulMatrices(A, B [][]uint16) [][]uint16 {
 

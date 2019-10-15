@@ -33,6 +33,7 @@ type EncapsSecretKey struct {
 type EncapsCipherText struct {
 	c1 []byte
 	c2 []byte
+	ss []byte
 }
 
 // EncapsKeyGen returns encapsulated key pairs structures
@@ -110,14 +111,14 @@ func (param *Parameters) EncapsKeyGen() (pk *EncapsPublicKey, sk *EncapsSecretKe
 	return
 }
 
-// Encaps returns 
+// Encaps returns
 func (param *Parameters) Encaps(message []byte, pk *EncapsPublicKey) (ct *EncapsCipherText) {
 
 	ct = new(EncapsCipherText)
 	m, temp := make([]byte, param.lenM/8), make([]byte, len(pk.seedA)+len(pk.b))
 	seed, pkh := make([]byte, (param.lseedSE+param.lenk)/8), make([]byte, (param.lenpkh)/8)
-	r := make([]byte, ((para.m * param.no) * 2 + param.n * param.m)*param.lenX/8)
-	seedSE, k := make([]byte, param.lseedSE/8 + 1), make([]byte, param.lenk/8)
+	r := make([]byte, ((param.m*param.no)*2+param.n*param.m)*param.lenX/8)
+	seedSE, k := make([]byte, param.lseedSE/8+1), make([]byte, param.lenk/8)
 
 	rand.Seed(time.Now().UTC().UnixNano())
 	for i := range m {
@@ -130,7 +131,7 @@ func (param *Parameters) Encaps(message []byte, pk *EncapsPublicKey) (ct *Encaps
 		temp[i+len(pk.seedA)] = pk.b[i]
 	}
 
-	if param.no = 640 {
+	if param.no == 640 {
 		shake := sha3.NewShake128()
 		shake.Write(temp)
 		shake.Read(pkh)
@@ -140,15 +141,15 @@ func (param *Parameters) Encaps(message []byte, pk *EncapsPublicKey) (ct *Encaps
 		shake.Read(pkh)
 	}
 
-	temp = new(make([]byte, len(pkh) + len(m)))
+	temp = make([]byte, len(pkh)+len(m))
 	for i := range pkh {
 		temp[i] = pkh[i]
 	}
 	for i := range m {
-		temp[i + len(pkh)] = pkh[i]
+		temp[i+len(pkh)] = pkh[i]
 	}
 
-	if param.no = 640 {
+	if param.no == 640 {
 		shake := sha3.NewShake128()
 		shake.Write(temp)
 		shake.Read(seed)
@@ -160,13 +161,13 @@ func (param *Parameters) Encaps(message []byte, pk *EncapsPublicKey) (ct *Encaps
 
 	seedSE[0] = 0x96
 	for i := 1; i < len(seedSE); i++ {
-		seedSE[i] = seed[i - 1]
+		seedSE[i] = seed[i-1]
 	}
 	for i := range k {
-		k[i] = seed[len(seedSE) - 1 + 1]
+		k[i] = seed[len(seedSE)-1+1]
 	}
 
-	if param.no = 640 {
+	if param.no == 640 {
 		shake := sha3.NewShake128()
 		shake.Write(seedSE)
 		shake.Read(r)
@@ -176,15 +177,15 @@ func (param *Parameters) Encaps(message []byte, pk *EncapsPublicKey) (ct *Encaps
 		shake.Read(r)
 	}
 
-	r1, r2 := make([]byte, param.m*param.no*parm.lenX/8), make([]byte, param.m*param.no*parm.lenX/8)
-	r3 := make([]byte, param.m*param.n*parm.lenX/8)
+	r1, r2 := make([]byte, param.m*param.no*param.lenX/8), make([]byte, param.m*param.no*param.lenX/8)
+	r3 := make([]byte, param.m*param.n*param.lenX/8)
 
 	for i := range r1 {
 		r1[i] = r[i]
-		r2[i] = r[i + len(r1)]
+		r2[i] = r[i+len(r1)]
 	}
-	for i := range r1 {
-		r3[i] = r[i + len(r1) * 2]
+	for i := range r3 {
+		r3[i] = r[i+len(r1)*2]
 	}
 
 	S1 := param.SampleMatrix(r1, param.m, param.no)
@@ -199,19 +200,20 @@ func (param *Parameters) Encaps(message []byte, pk *EncapsPublicKey) (ct *Encaps
 	ct.c1 = param.Pack(B1)
 	ct.c2 = param.Pack(C)
 
-	temp = new(make([]byte, len(ct.c1) + len(ct.c2) + len(k)))
+	temp = make([]byte, len(ct.c1)+len(ct.c2)+len(k))
 	for i := range ct.c1 {
 		temp[i] = ct.c1[i]
 	}
 	for i := range ct.c2 {
-		temp[i + len(ct.c1)] = ct.c2[i]
+		temp[i+len(ct.c1)] = ct.c2[i]
 	}
 	for i := range k {
-		temp[i + len(ct.c1) + len(ct.c2)] = k[i]
+		temp[i+len(ct.c1)+len(ct.c2)] = k[i]
 	}
 
 	ct.ss = make([]byte, param.lenss/8)
-	if param.no = 640 {
+	//param.shake(temp, ct.ss)
+	if param.no == 640 {
 		shake := sha3.NewShake128()
 		shake.Write(temp)
 		shake.Read(ct.ss)
@@ -224,3 +226,13 @@ func (param *Parameters) Encaps(message []byte, pk *EncapsPublicKey) (ct *Encaps
 	return
 }
 
+func (param *Parameters) Decaps(ct *EncapsCipherText, sk *EncapsSecretKey) (message []byte) {
+
+	B1, C := param.Unpack(ct.c1, param.m, param.no), param.Unpack(ct.c2, param.m, param.n)
+	B1S := param.mulMatrices(B1, sk.S)
+
+	M := param.subMatrices(C, B1S)
+	m := param.Decode(M)
+
+	pk := make([]byte)
+}
