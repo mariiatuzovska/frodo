@@ -1,10 +1,5 @@
 package frodo
 
-import (
-	"math/rand"
-	"time"
-)
-
 // KEM interface containts encasulation of key pairs, ciphertexts
 type KEM interface {
 	KeyGen() (pk *EncapsPublicKey, sk *EncapsSecretKey)                // returns encaps key pair
@@ -27,123 +22,69 @@ type EncapsSecretKey struct {
 	pkh   []byte     // {0,1}^lenpkh
 }
 
-// EncapsCipherText contain encapsulated ciphertext
+// EncapsCipherText structure
 type EncapsCipherText struct {
 	c1 []byte
 	c2 []byte
-	ss []byte
 }
 
-// EncapsKeyGen returns encapsulated key pairs structures
+// EncapsKeyGen returns encaps key pairs structures
 func (param *Parameters) EncapsKeyGen() (pk *EncapsPublicKey, sk *EncapsSecretKey) {
 
 	pk, sk = new(EncapsPublicKey), new(EncapsSecretKey)
 
-	seedSE, z, rLen := make([]byte, (param.lseedSE/8)+1), make([]byte, param.lenz/8), param.no*param.n*param.lenX/4
-	pk.seedA, sk.s = make([]byte, param.lseedA/8), make([]byte, param.lens/8)
-	r := make([]byte, rLen)
-
-	rand.Seed(time.Now().UTC().UnixNano())
-	for i := range sk.s {
-		sk.s[i] = byte(rand.Intn(256))
-	}
-	for i := range seedSE {
-		seedSE[i] = byte(rand.Intn(256))
-	}
-	for i := range z {
-		z[i] = byte(rand.Intn(256))
-	}
+	rLen := param.no * param.n * param.lenX / 4
+	seedSE, z := uniform(param.lseedSE/8+1), uniform(param.lenz/8)
 
 	seedSE[0] = 0x5f
-	param.shake(z, pk.seedA)
-	param.shake(seedSE, r)
-
-	rLen /= 2
-	r1, r2 := make([]byte, rLen), make([]byte, rLen)
-	for i := range r1 {
-		r1[i] = r[i]
-		r2[i] = r[rLen+1]
-	}
+	pk.seedA = param.shake(z, param.lseedA/8)
+	r := param.shake(seedSE, rLen)
 
 	A := param.Gen(pk.seedA)
-	sk.S = param.SampleMatrix(r1, param.no, param.n)
-	E := param.SampleMatrix(r2, param.no, param.n)
+
+	rLen /= 2
+	sk.S = param.SampleMatrix(r[:rLen], param.no, param.n)
+	E := param.SampleMatrix(r[rLen:], param.no, param.n)
 	B := param.mulAddMatrices(A, sk.S, E)
+
 	pk.b = param.Pack(B)
 
-	pkh := make([]byte, len(pk.seedA)+len(pk.b))
-	for i := range pk.seedA {
-		pkh[i] = pk.seedA[i]
-	}
-	for i := range pk.b {
-		pkh[i+len(pk.seedA)] = pk.b[i]
-	}
+	var pkh []byte
+	pkh = append(pkh, pk.seedA...)
+	pkh = append(pkh, pk.b...)
+	sk.pkh = param.shake(pkh, param.lenpkh/8)
 
-	sk.pkh = make([]byte, param.lenpkh/8)
-	param.shake(pkh, sk.pkh)
-
+	sk.s = uniform(param.lens / 8)
 	sk.seedA = pk.seedA
 	sk.b = pk.b
 
 	return
 }
 
-// Encaps returns encaps ciphertext
-func (param *Parameters) Encaps(message []byte, pk *EncapsPublicKey) (ct *EncapsCipherText) {
+// Encaps returns encaps ciphertext and secret ss
+func (param *Parameters) Encaps(message []byte, pk *EncapsPublicKey) (ct *EncapsCipherText, ss []byte) {
 
 	ct = new(EncapsCipherText)
-	m, temp := make([]byte, param.lenM/8), make([]byte, len(pk.seedA)+len(pk.b))
-	seed, pkh := make([]byte, (param.lseedSE+param.lenk)/8), make([]byte, (param.lenpkh)/8)
-	r := make([]byte, ((param.m*param.no)*2+param.n*param.m)*param.lenX/8)
-	seedSE, k := make([]byte, param.lseedSE/8+1), make([]byte, param.lenk/8)
 
-	rand.Seed(time.Now().UTC().UnixNano())
-	for i := range m {
-		m[i] = byte(rand.Intn(256))
-	}
-	for i := range pk.seedA {
-		temp[i] = pk.seedA[i]
-	}
-	for i := range pk.b {
-		temp[i+len(pk.seedA)] = pk.b[i]
-	}
+	rLen := ((param.m*param.no)*2 + param.n*param.m) * param.lenX / 8
+	m := uniform(param.lenM / 8)
 
-	param.shake(temp, pkh)
+	var pKey, seedSE []byte
+	pKey = append(pKey, pk.seedA...)
+	pKey = append(pKey, pk.b...)
 
-	temp = make([]byte, len(pkh)+len(m))
-	for i := range pkh {
-		temp[i] = pkh[i]
-	}
-	for i := range m {
-		temp[i+len(pkh)] = pkh[i]
-	}
+	pkh := param.shake(pKey, param.lenpkh/8)
+	pkh = append(pkh, m...)
+	seed := param.shake(pkh, (param.lseedSE+param.lenk)/8)
 
-	param.shake(temp, seed)
+	seedSE = append(seedSE, 0x96)
+	seedSE = append(seedSE, seed[:(param.lseedSE/8)]...)
+	r := param.shake(seedSE, rLen)
 
-	seedSE[0] = 0x96
-	for i := 1; i < len(seedSE); i++ {
-		seedSE[i] = seed[i-1]
-	}
-	for i := range k {
-		k[i] = seed[len(seedSE)-1+1]
-	}
-
-	param.shake(seedSE, r)
-
-	r1, r2 := make([]byte, param.m*param.no*param.lenX/8), make([]byte, param.m*param.no*param.lenX/8)
-	r3 := make([]byte, param.m*param.n*param.lenX/8)
-
-	for i := range r1 {
-		r1[i] = r[i]
-		r2[i] = r[i+len(r1)]
-	}
-	for i := range r3 {
-		r3[i] = r[i+len(r1)*2]
-	}
-
-	S1 := param.SampleMatrix(r1, param.m, param.no)
-	E1 := param.SampleMatrix(r2, param.m, param.no)
-	E2 := param.SampleMatrix(r1, param.m, param.n)
+	rLen = param.m * param.no * param.lenX / 8
+	S1 := param.SampleMatrix(r[:rLen], param.m, param.no)
+	E1 := param.SampleMatrix(r[rLen:2*rLen], param.m, param.no)
+	E2 := param.SampleMatrix(r[2*rLen:], param.m, param.n)
 
 	A := param.Gen(pk.seedA)
 	B1 := param.mulAddMatrices(S1, A, E1)
@@ -155,24 +96,18 @@ func (param *Parameters) Encaps(message []byte, pk *EncapsPublicKey) (ct *Encaps
 	ct.c1 = param.Pack(B1)
 	ct.c2 = param.Pack(C)
 
-	temp = make([]byte, len(ct.c1)+len(ct.c2)+len(k))
-	for i := range ct.c1 {
-		temp[i] = ct.c1[i]
-	}
-	for i := range ct.c2 {
-		temp[i+len(ct.c1)] = ct.c2[i]
-	}
-	for i := range k {
-		temp[i+len(ct.c1)+len(ct.c2)] = k[i]
-	}
+	var temp, k []byte
+	k = append(k, seed[(param.lseedSE/8):]...)
+	temp = append(temp, ct.c1...)
+	temp = append(temp, ct.c2...)
+	temp = append(temp, k...)
 
-	ct.ss = make([]byte, param.lenss/8)
-	param.shake(temp, ct.ss)
+	ss = param.shake(temp, param.lenss/8)
 
 	return
 }
 
-// Decaps returns
+// Decaps returns secret ss
 func (param *Parameters) Decaps(ct *EncapsCipherText, sk *EncapsSecretKey) (ss []byte) {
 
 	B1, C := param.Unpack(ct.c1, param.m, param.no), param.Unpack(ct.c2, param.m, param.n)
@@ -181,36 +116,22 @@ func (param *Parameters) Decaps(ct *EncapsCipherText, sk *EncapsSecretKey) (ss [
 	M := param.subMatrices(C, B1S)
 	m := param.Decode(M)
 
-	temp, pkh := make([]byte, (param.lseedSE+param.lenk)/8), make([]byte, len(sk.pkh)+len(m))
+	var pkh, seedSE, k1 []byte
+	pkh = append(pkh, sk.pkh...)
+	pkh = append(pkh, m...)
 
-	for i := range sk.pkh {
-		pkh[i] = sk.pkh[i]
-	}
-	for i := range m {
-		pkh[len(sk.pkh)+i] = m[i]
-	}
+	temp := param.shake(pkh, param.lseedSE+param.lenk/8)
 
-	param.shake(pkh, temp)
+	seedSE = append(seedSE, 0x96)
+	seedSE = append(seedSE, temp[:(param.lseedSE/8)]...)
 
-	seedSE, r := make([]byte, (param.lseedSE/8)+1), make([]byte, (2*param.no+param.n)*param.m*param.lenX/8)
-	seedSE[0] = 0x96
-	for i := 1; i < len(seedSE); i++ {
-		seedSE[i] = pkh[i-1]
-	}
+	rLen := (2*param.no + param.n) * param.m * param.lenX / 8
+	r := param.shake(seedSE, rLen)
 
-	k1 := make([]byte, param.lenk/8)
-	for i := range k1 {
-		k1[i] = pkh[len(seedSE)-1+i]
-	}
-
-	param.shake(seedSE, r)
-
-	r1, r2 := make([]byte, param.no*param.m*param.lenX/8), make([]byte, param.no*param.m*param.lenX/8)
-	r3 := make([]byte, param.n*param.m*param.lenX/8)
-
-	S1 := param.SampleMatrix(r1, param.m, param.no)
-	E1 := param.SampleMatrix(r2, param.m, param.no)
-	E2 := param.SampleMatrix(r3, param.m, param.n)
+	rLen = param.m * param.no * param.lenX / 8
+	S1 := param.SampleMatrix(r[:rLen], param.m, param.no)
+	E1 := param.SampleMatrix(r[rLen:2*rLen], param.m, param.no)
+	E2 := param.SampleMatrix(r[2*rLen:], param.m, param.n)
 
 	A := param.Gen(sk.seedA)
 	B := param.Unpack(sk.b, param.no, param.n)
@@ -219,36 +140,18 @@ func (param *Parameters) Decaps(ct *EncapsCipherText, sk *EncapsSecretKey) (ss [
 	V := param.mulAddMatrices(S1, B, E2)
 	C1 := param.sumMatrices(V, param.Encode(m))
 
+	var res []byte
+	res = append(res, ct.c1...)
+	res = append(res, ct.c2...)
+
 	if eqMatrices(B1, B2) == true && eqMatrices(C, C1) == true {
-
-		temp = make([]byte, len(ct.c1)+len(ct.c2)+len(k1))
-		for i := range ct.c1 {
-			temp[i] = ct.c1[i]
-		}
-		for i := range ct.c2 {
-			temp[i+len(ct.c1)] = ct.c2[i]
-		}
-		for i := range k1 {
-			temp[i+len(ct.c1)+len(ct.c2)] = k1[i]
-		}
-
+		k1 = append(k1, temp[(param.lseedSE/8):]...)
+		res = append(res, k1...)
 	} else {
-
-		temp = make([]byte, len(ct.c1)+len(ct.c2)+len(sk.s))
-		for i := range ct.c1 {
-			temp[i] = ct.c1[i]
-		}
-		for i := range ct.c2 {
-			temp[i+len(ct.c1)] = ct.c2[i]
-		}
-		for i := range sk.s {
-			temp[i+len(ct.c1)+len(ct.c2)] = sk.s[i]
-		}
-
+		res = append(res, sk.s...)
 	}
 
-	ss = make([]byte, param.lenss/8)
-	param.shake(temp, ss)
+	ss = param.shake(temp, param.lenss/8)
 
 	return
 }

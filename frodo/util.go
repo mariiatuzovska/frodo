@@ -1,7 +1,9 @@
 package frodo
 
 import (
+	"time"
 	"math"
+	"math/rand"
 
 	"golang.org/x/crypto/sha3"
 )
@@ -17,8 +19,19 @@ func (param *Parameters) dc(c uint16) uint16 {
 	return uint16(math.Round(r)) & (b - 1)
 }
 
-func (param *Parameters) shake(write, read []byte) {
+func uniform(length int) []byte {
 
+	temp := make([]byte, length)
+	rand.Seed(time.Now().UTC().UnixNano())
+	for i := range temp {
+		temp[i] = byte(rand.Intn(256))
+	}
+	return temp
+}
+
+func (param *Parameters) shake(write []byte, length int) []byte {
+
+	read := make([]byte, length)
 	if param.no == 640 {
 		shake := sha3.NewShake128()
 		shake.Write(write)
@@ -28,7 +41,7 @@ func (param *Parameters) shake(write, read []byte) {
 		shake.Write(write)
 		shake.Read(read)
 	}
-
+	return read
 }
 
 // A (n1*m1); B (n2*m2) => A * B = C (n1*m2)

@@ -1,10 +1,5 @@
 package frodo
 
-import (
-	"math/rand"
-	"time"
-)
-
 // PKE interface
 type PKE interface {
 	KeyGen() (pk *PublicKey, sk *SecretKey)       // key pair generation
@@ -32,32 +27,16 @@ type CipherText struct {
 func (param *Parameters) KeyGen() (pk *PublicKey, sk *SecretKey) {
 
 	pk, sk = new(PublicKey), new(SecretKey)
-	rLen := param.no * param.n * param.lenX / 4
-	pk.seedA = make([]byte, param.lseedA/8)
-	seedSE, r := make([]byte, (param.lseedSE/8)+1), make([]byte, rLen)
-
-	rand.Seed(time.Now().UTC().UnixNano())
-	for i := range pk.seedA {
-		pk.seedA[i] = byte(rand.Intn(256))
-	}
+	pk.seedA = uniform(param.lseedA/8)
+	rLen, seedSE := param.no * param.n * param.lenX / 4, uniform((param.lseedSE/8)+1)
 
 	seedSE[0] = 0x5F
-	for i := 1; i < len(seedSE); i++ {
-		seedSE[i] = byte(rand.Intn(256))
-	}
-
-	param.shake(seedSE, r)
+	r := param.shake(seedSE, rLen)
 
 	rLen /= 2
-	r1, r2 := make([]byte, rLen), make([]byte, rLen)
-	for i := range r1 {
-		r1[i] = r[i]
-		r2[i] = r[rLen+i]
-	}
-
 	A := param.Gen(pk.seedA)
-	sk.S = param.SampleMatrix(r1, param.no, param.n)
-	E := param.SampleMatrix(r2, param.no, param.n)
+	sk.S = param.SampleMatrix(r[:rLen], param.no, param.n)
+	E := param.SampleMatrix(r[rLen:], param.no, param.n)
 	pk.B = param.mulAddMatrices(A, sk.S, E)
 
 	return
@@ -66,31 +45,16 @@ func (param *Parameters) KeyGen() (pk *PublicKey, sk *SecretKey) {
 // Enc encrypts message for chosen parameters
 func (param *Parameters) Enc(message []byte, pk *PublicKey) *CipherText {
 
-	A, mn := param.Gen(pk.seedA), param.n*param.m
-	seedSE := make([]byte, ((param.lseedSE / 8) + 1))
-	r := make([]byte, ((2*param.m*param.no+mn)*param.lenX)/8)
+	A, rLen := param.Gen(pk.seedA), (2*param.m*param.no+param.n*param.m)*param.lenX/8
+	seedSE := uniform(param.lseedSE / 8 + 1)
+
 	seedSE[0] = 0x96
-	rand.Seed(time.Now().UTC().UnixNano())
-	for i := 1; i < len(seedSE); i++ {
-		seedSE[i] = byte(rand.Int())
-	}
+	r := param.shake(seedSE, rLen)
 
-	param.shake(seedSE, r)
-
-	rLen := param.m * param.no * param.lenX / 8
-	r1, r2, r3 := make([]byte, rLen), make([]byte, rLen), make([]byte, mn*param.lenX/8)
-	for i := range r1 {
-		r1[i] = r[i]
-		r2[i] = r[rLen+i]
-	}
-	rLen += rLen
-	for i := range r3 {
-		r3[i] = r[rLen+i]
-	}
-
-	S1 := param.SampleMatrix(r1, param.m, param.no)
-	E1 := param.SampleMatrix(r2, param.m, param.no)
-	E2 := param.SampleMatrix(r3, param.m, param.n)
+	rLen = param.m * param.no * param.lenX / 8
+	S1 := param.SampleMatrix(r[:rLen], param.m, param.no)
+	E1 := param.SampleMatrix(r[rLen:2*rLen], param.m, param.no)
+	E2 := param.SampleMatrix(r[2*rLen:], param.m, param.n)
 	V := param.mulAddMatrices(S1, pk.B, E2)
 
 	cipher := new(CipherText)
