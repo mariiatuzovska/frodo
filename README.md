@@ -115,8 +115,8 @@
 
     func main() {
 
-        frodo640 := frodo.Frodo976()
-        pk, sk := frodo976.KeyGen()
+        frodo := frodo.Frodo976()
+        pk, sk := frodo.KeyGen()
 
         m := []byte("This is my pure frodo976")
         
