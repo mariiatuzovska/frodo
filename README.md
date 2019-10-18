@@ -8,7 +8,7 @@
 
 ![](https://github.com/mariiatuzovska/frodokem/blob/master/img/frodo.jpg)
 
-## Progress 98%
+## Progress 
 
 - [x] Selected parameter sets;
 - [x] Success encode & decode matrices in Zq;
@@ -90,6 +90,15 @@
             $ go get "github.com/mariiatuzovska/frodokem"
             $ go get "golang.org/x/crypto"
 ```
+
+3. run test
+
+```
+	    $ go test 'github.com/mariiatuzovska/frodokem/frodo'
+
+```
+
+4. if test "ok", use anywhere :smiling_imp:
 
 ## Example
 
