@@ -35,6 +35,7 @@ func (param *Parameters) EncapsKeyGen() (pk *EncapsPublicKey, sk *EncapsSecretKe
 
 	rLen := param.no * param.n * param.lenX / 4
 	seedSE, z := uniform(param.lseedSE/8+1), uniform(param.lenz/8)
+	sk.s = uniform(param.lens / 8)
 
 	seedSE[0] = 0x5f
 	pk.seedA = param.shake(z, param.lseedA/8)
@@ -45,16 +46,15 @@ func (param *Parameters) EncapsKeyGen() (pk *EncapsPublicKey, sk *EncapsSecretKe
 	rLen /= 2
 	sk.S = param.SampleMatrix(r[:rLen], param.no, param.n)
 	E := param.SampleMatrix(r[rLen:], param.no, param.n)
-	B := param.mulAddMatrices(A, sk.S, E)
 
+	B := param.mulAddMatrices(A, sk.S, E)
 	pk.b = param.Pack(B)
 
 	var pkh []byte
 	pkh = append(pkh, pk.seedA...)
 	pkh = append(pkh, pk.b...)
+	
 	sk.pkh = param.shake(pkh, param.lenpkh/8)
-
-	sk.s = uniform(param.lens / 8)
 	sk.seedA = pk.seedA
 	sk.b = pk.b
 
@@ -62,7 +62,7 @@ func (param *Parameters) EncapsKeyGen() (pk *EncapsPublicKey, sk *EncapsSecretKe
 }
 
 // Encaps returns encaps ciphertext and secret ss
-func (param *Parameters) Encaps(message []byte, pk *EncapsPublicKey) (ct *EncapsCipherText, ss []byte) {
+func (param *Parameters) Encaps(pk *EncapsPublicKey) (ct *EncapsCipherText, ss []byte) {
 
 	ct = new(EncapsCipherText)
 
@@ -77,7 +77,7 @@ func (param *Parameters) Encaps(message []byte, pk *EncapsPublicKey) (ct *Encaps
 	pkh = append(pkh, m...)
 	seed := param.shake(pkh, (param.lseedSE+param.lenk)/8)
 
-	seedSE = append(seedSE, 0x96)
+	seedSE = append(seedSE, []byte{0x96}...)
 	seedSE = append(seedSE, seed[:(param.lseedSE/8)]...)
 	r := param.shake(seedSE, rLen)
 
@@ -114,16 +114,16 @@ func (param *Parameters) Decaps(ct *EncapsCipherText, sk *EncapsSecretKey) (ss [
 	B1S := param.mulMatrices(B1, sk.S)
 
 	M := param.subMatrices(C, B1S)
-	m := param.Decode(M)
+	m1 := param.Decode(M)
 
 	var pkh, seedSE, k1 []byte
 	pkh = append(pkh, sk.pkh...)
-	pkh = append(pkh, m...)
+	pkh = append(pkh, m1...)
 
-	temp := param.shake(pkh, param.lseedSE+param.lenk/8)
+	seed := param.shake(pkh, (param.lseedSE+param.lenk)/8)
 
-	seedSE = append(seedSE, 0x96)
-	seedSE = append(seedSE, temp[:(param.lseedSE/8)]...)
+	seedSE = append(seedSE, []byte{0x96}...)
+	seedSE = append(seedSE, seed[:(param.lseedSE/8)]...)
 
 	rLen := (2*param.no + param.n) * param.m * param.lenX / 8
 	r := param.shake(seedSE, rLen)
@@ -138,20 +138,20 @@ func (param *Parameters) Decaps(ct *EncapsCipherText, sk *EncapsSecretKey) (ss [
 
 	B2 := param.mulAddMatrices(S1, A, E1)
 	V := param.mulAddMatrices(S1, B, E2)
-	C1 := param.sumMatrices(V, param.Encode(m))
+	C1 := param.sumMatrices(V, param.Encode(m1))
 
 	var res []byte
 	res = append(res, ct.c1...)
 	res = append(res, ct.c2...)
 
 	if eqMatrices(B1, B2) == true && eqMatrices(C, C1) == true {
-		k1 = append(k1, temp[(param.lseedSE/8):]...)
+		k1 = append(k1, seed[(param.lseedSE/8):]...)
 		res = append(res, k1...)
 	} else {
 		res = append(res, sk.s...)
 	}
 
-	ss = param.shake(temp, param.lenss/8)
+	ss = param.shake(res, param.lenss/8)
 
 	return
 }

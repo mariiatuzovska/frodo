@@ -189,7 +189,7 @@ func (param *Parameters) Gen(seed []byte) [][]uint16 {
 	A := make([][]uint16, param.no)
 	for i := uint16(0); i < uint16(param.no); i++ {
 
-		b := []byte{byte(i >> 8), byte(i)} 
+		b := []byte{byte(i >> 8), byte(i)}
 		b = append(b, seed...)
 		shakeStr := param.shake(b, param.no*2)
 

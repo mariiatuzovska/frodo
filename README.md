@@ -8,7 +8,7 @@
 
 ![](https://github.com/mariiatuzovska/frodokem/blob/master/img/frodo.jpg)
 
-## Progress 70%
+## Progress 98%
 
 - [x] Selected parameter sets;
 - [x] Success encode & decode matrices in Zq;
@@ -17,9 +17,9 @@
 - [x] Sampling from the error distribution;
 - [x] Pseudorandom matrix generation using SHAKE128, SHAKE256;
 - [x] IND-CPA-secure public-key encryption (PKE) scheme (encryption/decryption, key generation);
-- [ ] IND-CCA-secure key encapsulation mechanism (KEM);
+- [x] IND-CCA-secure key encapsulation mechanism (KEM);
 
-- [ ] Writing tests;
+- [x] Written tests;
 - [ ] Optimising computational process.
 
 ## Math & Implementations
@@ -30,7 +30,7 @@
 
 **Realisation of bit-strings.** Bit string *s* with length *len* realised like []byte slice with length *(len / 8)* in little-endian order.
 
-**Learning With Errors.** The security of PKE and KEM relies on the hardness of the Learning With Errors (LWE) problem. 
+**Learning With Errors.** The security of PKE and KEM relies on the hardness of the Learning With Errors (LWE) problem. Input instances are chosen at random from a prescribed probability distribution. Some parameterizations of LWE admit (quantum or classical) reductions from worst-case lattice problems. That is, any algorithm that solves n-dimensional LWE (with some non-negligible advantage) can be converted with some polynomial overhead into a (quantum) algorithm that solves certain short-vector problems on any n-dimensional lattice (with high probability). Therefore, if the latter problems have some (quantumly) hard instances, then random instances of LWE are also hard [\[FKEM\]](https://github.com/mariiatuzovska/frodokem/blob/master/papers/FrodoKEM-specification-20190702.pdf).
 
 **LWE distribution.** Let n,q be positive integers, and let X be a distribution over Z. For an *s* in (Zq)^n, the LWE *distribution* A(s,x) is the distribution over (Zq)^n \* Zq obtained by choosing *a* in (Zq)^n uniformly at random and an integer error *e* in Z from X, and outputting the pair <*a*, <*a*, *s*> + *e* (mod q)> in (Zq)^n \* Zq.
 
@@ -54,11 +54,11 @@
 
 :point_right: IND-CCA-secure key encapsulation mechanism [`kem`](https://github.com/mariiatuzovska/frodokem/blob/master/frodo/kem.go);
 
-:point_right: Tests [`test`](https://github.com/mariiatuzovska/frodokem/blob/master/frodo/frodo_test.go);
+:point_right: Tests PKE & KEM [`test`](https://github.com/mariiatuzovska/frodokem/blob/master/frodo/frodo_test.go);
 
 ## Advantages & Disadvantages of my implementation
 
-:ok_hand: You can add your custom parameters following code in function [`func Frodo640`](https://github.com/mariiatuzovska/frodokem/blob/master/frodo/frodo.go) (if you understand [main theory](https://github.com/mariiatuzovska/frodokem/blob/master/papers/FrodoKEM-specification-20190702.pdf)) and use them in any future work with FrodoKEM;
+:ok_hand: You can add your custom parameters following Frodo640, Frodo976, Frodo1344 functions [`frodo.go`](https://github.com/mariiatuzovska/frodokem/blob/master/frodo/frodo.go) (if you understand [main theory](https://github.com/mariiatuzovska/frodokem/blob/master/papers/FrodoKEM-specification-20190702.pdf)) and use them in any future work with FrodoKEM;
 
 :poop: It is hard mathematical task to get the parameters;
 
@@ -112,8 +112,33 @@
 	    ct := frodo.Enc(m, pk)
 	    pt := frodo.Dec(ct, sk)
 
-	    fmt.Printf(string(pt))
+	    fmt.Println(string(pt))
         
+    } 
+
+```
+
+### Encaps & Decaps
+
+```
+    package main
+
+    import (
+        "fmt"
+        
+        "github.com/mariiatuzovska/frodokem/frodo"
+    )
+
+    func main() {
+
+        frodo := frodo.Frodo1344()
+
+	    pk, sk := frodo.EncapsKeyGen()
+	    ct, ss := frodo.Encaps(pk)
+	    s2 := frodo.Decaps(ct, sk)
+
+	    fmt.Printf("%x\n", ss)
+        fmt.Printf("%x\n", s2)
     } 
 
 ```

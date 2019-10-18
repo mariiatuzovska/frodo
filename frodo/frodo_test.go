@@ -64,7 +64,7 @@ func TestFrodo976(t *testing.T) {
 
 func TestFrodo1344(t *testing.T) {
 
-	frodo := frodo.Frodo976()
+	frodo := frodo.Frodo1344()
 
 	m := make([]byte, 256/8)
 	rand.Seed(time.Now().UTC().UnixNano())
@@ -85,6 +85,51 @@ func TestFrodo1344(t *testing.T) {
 			if M[i][j] != E[i][j] {
 				t.Error("Expected message\n", m, "\ngot\n", e)
 			}
+		}
+	}
+}
+
+func TestKEMFrodo640(t *testing.T) {
+
+	frodo := frodo.Frodo640()
+
+	pk, sk := frodo.EncapsKeyGen()
+	ct, ss := frodo.Encaps(pk)
+	s2 := frodo.Decaps(ct, sk)
+
+	for i := range ss {
+		if ss[i] != s2[i] {
+			t.Error("Expected secret\n", ss, "\nbut has got\n", s2)
+		}
+	}
+}
+
+func TestKEMFrodo976(t *testing.T) {
+
+	frodo := frodo.Frodo976()
+
+	pk, sk := frodo.EncapsKeyGen()
+	ct, ss := frodo.Encaps(pk)
+	s2 := frodo.Decaps(ct, sk)
+
+	for i := range ss {
+		if ss[i] != s2[i] {
+			t.Error("Expected secret\n", ss, "\nbut has got\n", s2)
+		}
+	}
+}
+
+func TestKEMFrodo1344(t *testing.T) {
+
+	frodo := frodo.Frodo1344()
+
+	pk, sk := frodo.EncapsKeyGen()
+	ct, ss := frodo.Encaps(pk)
+	s2 := frodo.Decaps(ct, sk)
+
+	for i := range ss {
+		if ss[i] != s2[i] {
+			t.Error("Expected secret\n", ss, "\nbut has got\n", s2)
 		}
 	}
 }
