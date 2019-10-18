@@ -62,9 +62,11 @@
 
 :poop: It is hard mathematical task to get the parameters;
 
-:heart_eyes_cat: Pretty native Golang: using best practices of language;
+:heart_eyes_cat: pretty native Golang: using best practices of language;
 
-:space_invader: Written tests.
+:sleeping: a little bit slower than portable C;
+
+:space_invader: written tests.
 
 ## Inspiration
 
@@ -109,10 +111,10 @@
 
         m := []byte("This is my pure frodo976")
         
-	    ct := frodo.Enc(m, pk)
-	    pt := frodo.Dec(ct, sk)
+	ct := frodo.Enc(m, pk)
+	pt := frodo.Dec(ct, sk)
 
-	    fmt.Println(string(pt))
+	fmt.Println(string(pt))
         
     } 
 
@@ -133,11 +135,11 @@
 
         frodo := frodo.Frodo1344()
 
-	    pk, sk := frodo.EncapsKeyGen()
-	    ct, ss := frodo.Encaps(pk)
-	    s2 := frodo.Decaps(ct, sk)
+	pk, sk := frodo.EncapsKeyGen()
+	ct, ss := frodo.Encaps(pk)
+	s2 := frodo.Decaps(ct, sk)
 
-	    fmt.Printf("%x\n", ss)
+	fmt.Printf("%x\n", ss)
         fmt.Printf("%x\n", s2)
     } 
 
