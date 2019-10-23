@@ -13,14 +13,12 @@
 - [x] Selected parameter sets;
 - [x] Success encode & decode matrices in Zq;
 - [x] Success pack & unpack matrices;
-- [ ] Read all in specification;
 - [x] Sampling from the error distribution;
 - [x] Pseudorandom matrix generation using SHAKE128, SHAKE256;
 - [x] IND-CPA-secure public-key encryption (PKE) scheme (encryption/decryption, key generation);
 - [x] IND-CCA-secure key encapsulation mechanism (KEM);
 
-- [x] Written tests;
-- [ ] Optimising computational process.
+- [x] Written tests.
 
 ## Math & Implementations
 
@@ -28,13 +26,13 @@
 
 **Realisation of matrices over the ring.** Matrix A (m*n) contains unsigned 16-bit numbers in ring of integers modulo q.
 
-**Realisation of bit-strings.** Bit string *s* with length *len* realised like []byte slice with length *(len / 8)* in little-endian order.
+**Realisation of bit-strings.** Bit string *s* with length *len* defined like []byte slice with length *(len / 8)* in little-endian order.
 
 **Learning With Errors.** The security of PKE and KEM relies on the hardness of the Learning With Errors (LWE) problem. Input instances are chosen at random from a prescribed probability distribution. Some parameterizations of LWE admit (quantum or classical) reductions from worst-case lattice problems. That is, any algorithm that solves n-dimensional LWE (with some non-negligible advantage) can be converted with some polynomial overhead into a (quantum) algorithm that solves certain short-vector problems on any n-dimensional lattice (with high probability). Therefore, if the latter problems have some (quantumly) hard instances, then random instances of LWE are also hard [\[FKEM\]](https://github.com/mariiatuzovska/frodokem/blob/master/papers/FrodoKEM-specification-20190702.pdf).
 
 **LWE distribution.** Let n,q be positive integers, and let X be a distribution over Z. For an *s* in (Zq)^n, the LWE *distribution* A(s,x) is the distribution over (Zq)^n \* Zq obtained by choosing *a* in (Zq)^n uniformly at random and an integer error *e* in Z from X, and outputting the pair <*a*, <*a*, *s*> + *e* (mod q)> in (Zq)^n \* Zq.
 
-**Pseudorandom matrix generation.** As NIST currently does not standardize such a primitive, so I choose proposals in [`FrodoKEM specification`](https://github.com/mariiatuzovska/frodokem/blob/master/papers/FrodoKEM-specification-20190702.pdf) to use SHAKE128 & SHAKE256.
+**Pseudorandom matrix generation.** As NIST currently does not standardize such a primitive, so I choose proposals in [\[FKEM\]](https://github.com/mariiatuzovska/frodokem/blob/master/papers/FrodoKEM-specification-20190702.pdf) to use SHAKE128 & SHAKE256.
 
 ## List of implementations/packages
 
@@ -54,17 +52,13 @@
 
 :point_right: IND-CCA-secure key encapsulation mechanism [`kem`](https://github.com/mariiatuzovska/frodokem/blob/master/frodo/kem.go);
 
-:point_right: Tests PKE & KEM [`test`](https://github.com/mariiatuzovska/frodokem/blob/master/frodo/frodo_test.go);
+:point_right: Testing PKE & KEM, unit tests [`test`](https://github.com/mariiatuzovska/frodokem/blob/master/frodo/frodo_test.go);
 
 ## Advantages & Disadvantages of my implementation
 
-:ok_hand: You can add your custom parameters following Frodo640, Frodo976, Frodo1344 functions [`frodo.go`](https://github.com/mariiatuzovska/frodokem/blob/master/frodo/frodo.go) (if you understand [main theory](https://github.com/mariiatuzovska/frodokem/blob/master/papers/FrodoKEM-specification-20190702.pdf)) and use them in any future work with FrodoKEM;
+:heart_eyes_cat: Pretty native Golang: using best practices of language;
 
-:poop: It is hard mathematical task to get the parameters;
-
-:heart_eyes_cat: pretty native Golang: using best practices of language;
-
-:sleeping: a little bit slower than portable C;
+:sleeping: slower than portable C;
 
 :space_invader: written tests.
 
@@ -95,10 +89,9 @@
 
 ```
 	    $ go test 'github.com/mariiatuzovska/frodokem/frodo'
-
 ```
 
-4. if test "ok", use anywhere :smiling_imp:
+4. if test ok, use anywhere :smiling_imp:
 
 ## Example
 
