@@ -23,12 +23,12 @@ type CipherText struct {
 	C1, C2 [][]uint16
 }
 
-// KeyGen genere key pairs for chosen parameters
+// KeyGen genere key pair for chosen parameters
 func (param *Parameters) KeyGen() (pk *PublicKey, sk *SecretKey) {
 
 	pk, sk = new(PublicKey), new(SecretKey)
-	pk.seedA = uniform(param.lseedA/8)
-	rLen, seedSE := param.no * param.n * param.lenX / 4, uniform((param.lseedSE/8)+1)
+	pk.seedA = uniform(param.lseedA / 8)
+	rLen, seedSE := param.no*param.n*param.lenX/4, uniform((param.lseedSE/8)+1)
 
 	seedSE[0] = 0x5F
 	r := param.shake(seedSE, rLen)
@@ -42,11 +42,12 @@ func (param *Parameters) KeyGen() (pk *PublicKey, sk *SecretKey) {
 	return
 }
 
-// Enc encrypts message for chosen parameters
+// Enc encrypts message for chosen parameters, using public key structure
+// returns C = (C1, C2); C1 = S1*A + E1,
+// C2 = V + M = S1*B + E2 + M = S1*A*S + S1*E + E2 + M
 func (param *Parameters) Enc(message []byte, pk *PublicKey) *CipherText {
-
+	seedSE := uniform(param.lseedSE/8 + 1)
 	A, rLen := param.Gen(pk.seedA), (2*param.m*param.no+param.n*param.m)*param.lenX/8
-	seedSE := uniform(param.lseedSE / 8 + 1)
 
 	seedSE[0] = 0x96
 	r := param.shake(seedSE, rLen)
@@ -65,7 +66,8 @@ func (param *Parameters) Enc(message []byte, pk *PublicKey) *CipherText {
 }
 
 // Dec return decrypted with secret key cihertext
-// with error S1*E + E2 − E1*S.
+// with error S1*E + E2 − E1*S, that cleans up with using Decode
+// proved by lemma 2.18 [FKEM]
 func (param *Parameters) Dec(cipher *CipherText, sk *SecretKey) []byte {
 
 	M := param.subMatrices(cipher.C2, param.mulMatrices(cipher.C1, sk.S)) // M = C2 - C1*S = Enc(message) + S1*E + E2 - E1*S

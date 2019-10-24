@@ -1,10 +1,10 @@
 package frodo
 
-// KEM interface containts encasulation of key pairs, ciphertexts
+// KEM interface
 type KEM interface {
-	KeyGen() (pk *EncapsPublicKey, sk *EncapsSecretKey)                // returns encaps key pair
-	Encaps(message []byte, pk *EncapsPublicKey) (ct *EncapsCipherText) // returns encaps ct
-	Decaps(ct *EncapsCipherText, sk *EncapsSecretKey) (message []byte) // returns message
+	EncapsKeyGen() (pk *EncapsPublicKey, sk *EncapsSecretKey)     // returns key pair
+	Encaps(pk *EncapsPublicKey) (ct *EncapsCipherText, ss []byte) // returns ct and secret ss
+	Decaps(ct *EncapsCipherText, sk *EncapsSecretKey) (ss []byte) // using sk, returns secret ss from ct
 }
 
 // EncapsPublicKey structure
@@ -28,7 +28,7 @@ type EncapsCipherText struct {
 	c2 []byte
 }
 
-// EncapsKeyGen returns encaps key pairs structures
+// EncapsKeyGen returns key pair structure
 func (param *Parameters) EncapsKeyGen() (pk *EncapsPublicKey, sk *EncapsSecretKey) {
 
 	pk, sk = new(EncapsPublicKey), new(EncapsSecretKey)
@@ -53,7 +53,7 @@ func (param *Parameters) EncapsKeyGen() (pk *EncapsPublicKey, sk *EncapsSecretKe
 	var pkh []byte
 	pkh = append(pkh, pk.seedA...)
 	pkh = append(pkh, pk.b...)
-	
+
 	sk.pkh = param.shake(pkh, param.lenpkh/8)
 	sk.seedA = pk.seedA
 	sk.b = pk.b
@@ -61,7 +61,7 @@ func (param *Parameters) EncapsKeyGen() (pk *EncapsPublicKey, sk *EncapsSecretKe
 	return
 }
 
-// Encaps returns encaps ciphertext and secret ss
+// Encaps returns ciphertext and secret ss using public key
 func (param *Parameters) Encaps(pk *EncapsPublicKey) (ct *EncapsCipherText, ss []byte) {
 
 	ct = new(EncapsCipherText)
@@ -107,7 +107,7 @@ func (param *Parameters) Encaps(pk *EncapsPublicKey) (ct *EncapsCipherText, ss [
 	return
 }
 
-// Decaps returns secret ss
+// Decaps returns secret ss from ciphertext using secret key
 func (param *Parameters) Decaps(ct *EncapsCipherText, sk *EncapsSecretKey) (ss []byte) {
 
 	B1, C := param.Unpack(ct.c1, param.m, param.no), param.Unpack(ct.c2, param.m, param.n)
