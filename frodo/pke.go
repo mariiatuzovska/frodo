@@ -2,23 +2,23 @@ package frodo
 
 // PKE interface
 type PKE interface {
-	KeyGen() (pk *PublicKey, sk *SecretKey)       // key pair generation
-	Enc(pk *PublicKey) (C1, C2 [][]uint16)        // return encrypted messages
-	Dec(cipher *CipherText, sk *SecretKey) []byte // return decrypted with sekret key cihertext
+	KeyGen() (pk *PublicKey, sk *SecretKey)        // returns key pair sructure
+	Enc(message []byte, pk *PublicKey) *CipherText // returns CipherText structure which contains C = (C1, C2)
+	Dec(cipher *CipherText, sk *SecretKey) []byte  // returns decrypted with secret key ciphertext 
 }
 
-// PublicKey structure
+// PublicKey structure contains seedA uniform bit string and matrix B (n * m) є Zq
 type PublicKey struct {
 	seedA []byte     // uniform string
 	B     [][]uint16 // matrix є Zq
 }
 
-// SecretKey structure
+// SecretKey structure contains matrix S є Zq
 type SecretKey struct {
 	S [][]uint16 // matrix є Zq
 }
 
-// CipherText structure
+// CipherText structure contains matrices C1 and C2
 type CipherText struct {
 	C1, C2 [][]uint16
 }
@@ -65,7 +65,7 @@ func (param *Parameters) Enc(message []byte, pk *PublicKey) *CipherText {
 	return cipher
 }
 
-// Dec return decrypted with secret key cihertext
+// Dec returns decrypted with secret key cihertext
 // with error S1*E + E2 − E1*S, that cleans up with using Decode
 // proved by lemma 2.18 [FKEM]
 func (param *Parameters) Dec(cipher *CipherText, sk *SecretKey) []byte {
