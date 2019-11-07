@@ -203,10 +203,10 @@ func TestEncodeDecode1344(t *testing.T) {
 	}
 }
 
-// testing puch & unpack
+// testing pack & unpack
 // frodo pkg frodo.go
 
-func TestUnpakPack640(t *testing.T) {
+func TestUnpackPack640(t *testing.T) {
 
 	frodo := frodo.Frodo640()
 
@@ -226,7 +226,7 @@ func TestUnpakPack640(t *testing.T) {
 	}
 }
 
-func TestUnpakPack976(t *testing.T) {
+func TestUnpackPack976(t *testing.T) {
 
 	frodo := frodo.Frodo976()
 
@@ -246,7 +246,7 @@ func TestUnpakPack976(t *testing.T) {
 	}
 }
 
-func TestUnpakPack1344(t *testing.T) {
+func TestUnpackPack1344(t *testing.T) {
 
 	frodo := frodo.Frodo1344()
 

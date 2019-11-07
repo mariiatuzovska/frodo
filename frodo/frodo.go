@@ -5,30 +5,28 @@ type Frodo interface {
 	Encode(k []byte) [][]uint16                   // Encode encodes an integer 0 ≤ k < 2^B as an element in Zq by multiplying it by q/2B = 2^(D−B): ec(k) := k·q/2^B
 	Decode(K [][]uint16) []byte                   // Decode decodes the m-by-n matrix K into a bit string of length l = B·m·n. dc(c) = ⌊c·2^B/q⌉ mod 2^B
 	Pack(C [][]uint16) []byte                     // Pack packs a matrix into a bit string
-	Unpack(b []byte, n1, n2 int) [][]uint16       // Unpack unpacks a bit string into a matrix
+	Unpack(b []byte, n1, n2 int) [][]uint16       // Unpack unpacks a bit string into a matrix n1-by-n2
 	Gen(seed []byte) [][]uint16                   // Gen returns a pseudorandom matrix using SHAKE128
 	Sample(t uint16) uint16                       // Sample returns a sample e from the distribution χ
-	SampleMatrix(r []byte, n1, n2 int) [][]uint16 // SampleMatrix sample the n1 * n2 matrix entry
+	SampleMatrix(r []byte, n1, n2 int) [][]uint16 // SampleMatrix sample the n1-by-n2 matrix entry
 }
 
 // Parameters of frodo KEM mechanism
 type Parameters struct {
-	no      int      // n ≡ 0 (mod 8) the main parameter
-	q       uint16   // a power-of-two integer modulus with exponent D ≤ 16 minus one
-	D       int      // a power
-	m, n    int      // integer matrix dimensions with
-	B       int      // the number of bits encoded in each matrix entry
-	l       int      // B·m·n, the length of bit strings that are encoded as m-by-n matrices
-	lseedA  int      // the bit length of seeds used for pseudorandom matrix generation
-	lseedSE int      // the bit length of seeds used for pseudorandom bit generation for error sampling
-	lens    int      // the bit length of seeds used for generating key pairs (KEM)
-	lenz    int      // the bit length of seeds used for generating key pairs (KEM)
-	lenk    int      // the bit length of seeds used for generating seedSE in Encaps (KEM)
-	lenpkh  int      // the bit length of seeds used for generating key pairs (KEM)
-	lenss   int      // the bit length of seeds used for sharing secret ss (KEM)
-	lenX    int      // length of χ distribution
-	X       []uint16 // a probability distribution on Z, rounded Gaussian distribution
-	lenM    int      // bit length of message
+	no      int      		// n ≡ 0 (mod 8) the main parameter
+	q       uint16   		// a power-of-two integer modulus with exponent D ≤ 16 !! minus one for bit masking
+	D       int      		// a power 
+	m, n    int      		// integer matrix dimensions with
+	B       int      		// the number of bits encoded in each matrix entry
+	l       int      		// B·m·n, the length of bit strings that are encoded as m-by-n matrices
+	lseedA  int      		// the byte length of seed used for pseudorandom pk-matrix generation
+	lseedSE int      		// the byte length of seed used for pseudorandom bit generation for error sampling
+	lens, lenz, lenpkh int  // the byte length of seeds used for generating key pairs (KEM)
+	lenk    int      		// the byte length of seed used for generating seedSE in Encaps (KEM)
+	lenss   int      		// the byte length of secret ss (KEM)
+	lenX    int      		// the byte length of χ distribution
+	X       []uint16 		// a probability distribution on Z, rounded Gaussian distribution
+	lenM    int      		// byte length of message
 }
 
 // Frodo640 returns Parameters struct no.640
@@ -42,16 +40,16 @@ func Frodo640() *Parameters {
 	param.B = 2
 	param.m = 8
 	param.n = 8
-	param.lseedA = 128
-	param.lseedSE = 128
-	param.lenM = 128
-	param.lens = 128
-	param.lenk = 128
-	param.lenz = 128
-	param.lenpkh = 128
-	param.lenss = 128
-	param.lenX = 16
-	param.l = 128
+	param.lseedA = 16 
+	param.lseedSE = 16
+	param.lenM = 16
+	param.lens = 16
+	param.lenk = 16
+	param.lenz = 16
+	param.lenpkh = 16
+	param.lenss = 16
+	param.lenX = 2
+	param.l = 16
 	param.X = []uint16{4643, 13363, 20579, 25843, 29227, 31145, 32103, 32525, 32689, 32745, 32762, 32766, 32767}
 
 	return param
@@ -68,16 +66,16 @@ func Frodo976() *Parameters {
 	param.B = 3
 	param.m = 8
 	param.n = 8
-	param.lseedA = 128
-	param.lseedSE = 192
-	param.lenM = 192
-	param.lens = 192
-	param.lenk = 192
-	param.lenz = 192
-	param.lenpkh = 192
-	param.lenss = 192
-	param.lenX = 16
-	param.l = 192
+	param.lseedA = 16
+	param.lseedSE = 24
+	param.lenM = 24
+	param.lens = 24
+	param.lenk = 24
+	param.lenz = 24
+	param.lenpkh = 24
+	param.lenss = 24
+	param.lenX = 2
+	param.l = 24
 	param.X = []uint16{5638, 15915, 23689, 28571, 31116, 32217, 32613, 32731, 32760, 32766, 32767}
 
 	return param
@@ -94,22 +92,23 @@ func Frodo1344() *Parameters {
 	param.B = 4
 	param.m = 8
 	param.n = 8
-	param.lseedA = 128
-	param.lseedSE = 256
-	param.lenM = 256
-	param.lens = 256
-	param.lenk = 256
-	param.lenz = 256
-	param.lenpkh = 256
-	param.lenss = 256
-	param.lenX = 16
-	param.l = 256
+	param.lseedA = 16
+	param.lseedSE = 32
+	param.lenM = 32
+	param.lens = 32
+	param.lenk = 32
+	param.lenz = 32
+	param.lenpkh = 32
+	param.lenss = 32
+	param.lenX = 2
+	param.l = 32
 	param.X = []uint16{9142, 23462, 30338, 32361, 32725, 32765, 32767}
 
 	return param
 }
 
-// Encode encodes an integer 0 ≤ k < 2^B as an element in Zq by multiplying it by q/2B = 2^(D−B): ec(k) := k·q/2^B
+// Encode encodes an integer 0 ≤ k < 2^B as an element in Zq 
+// by multiplying it by q/2B = 2^(D−B): ec(k) := k·q/2^B
 func (param *Parameters) Encode(k []byte) [][]uint16 {
 
 	K := make([][]uint16, param.m)
@@ -129,10 +128,10 @@ func (param *Parameters) Encode(k []byte) [][]uint16 {
 	return K
 }
 
-// Decode decodes the m*n matrix K into a bit string of {0,1}^(B·m·n). dc(c) = ⌊c·2^B/q⌉ mod 2^B
+// Decode decodes the m-by-n matrix K into a bit string of {0,1}^(B·m·n). dc(c) = ⌊c·2^B/q⌉ mod 2^B
 func (param *Parameters) Decode(K [][]uint16) []byte {
 
-	k := make([]byte, param.l/8)
+	k := make([]byte, param.l)
 	for i, row := range K {
 		for j := range row {
 			temp := param.dc(K[i][j])
@@ -147,7 +146,7 @@ func (param *Parameters) Decode(K [][]uint16) []byte {
 	return k
 }
 
-// Pack packs a matrix (n1*n2) over Zq into a bit string {0,1}^(D*n1*n2)
+// Pack packs a n1-by-n2 matrix over Zq into a bit string {0,1}^(D*n1*n2)
 func (param *Parameters) Pack(C [][]uint16) []byte {
 
 	n1, n2 := len(C), len(C[0])
@@ -165,7 +164,7 @@ func (param *Parameters) Pack(C [][]uint16) []byte {
 	return b
 }
 
-// Unpack unpacks a bit string {0,1}^(D*n1*n2) into a matrix (n1*n2) over Zq
+// Unpack unpacks a bit string {0,1}^(D*n1*n2) into a matrix (n1-by-n2) over Zq
 func (param *Parameters) Unpack(b []byte, n1, n2 int) [][]uint16 {
 
 	C := make([][]uint16, n1)
@@ -217,7 +216,7 @@ func (param *Parameters) Sample(r uint16) uint16 {
 	return e
 }
 
-// SampleMatrix sample the n1 * n2 matrix entry
+// SampleMatrix sample the n1-by-n2 matrix entry
 func (param *Parameters) SampleMatrix(r []byte, n1, n2 int) [][]uint16 {
 
 	E := make([][]uint16, n1)

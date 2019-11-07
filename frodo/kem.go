@@ -3,7 +3,7 @@ package frodo
 // KEM interface
 type KEM interface {
 	EncapsKeyGen() (pk *EncapsPublicKey, sk *EncapsSecretKey)     // returns key pair
-	Encaps(pk *EncapsPublicKey) (ct *EncapsCipherText, ss []byte) // returns ct and secret ss
+	Encaps(pk *EncapsPublicKey) (ct *EncapsCipherText, ss []byte) // using pk, returns ct and secret ss
 	Decaps(ct *EncapsCipherText, sk *EncapsSecretKey) (ss []byte) // using sk, returns secret ss from ct
 }
 
@@ -28,17 +28,17 @@ type EncapsCipherText struct {
 	c2 []byte
 }
 
-// EncapsKeyGen returns key pair structure
+// EncapsKeyGen returns encapsulated key pair structure
 func (param *Parameters) EncapsKeyGen() (pk *EncapsPublicKey, sk *EncapsSecretKey) {
 
 	pk, sk = new(EncapsPublicKey), new(EncapsSecretKey)
 
-	rLen := param.no * param.n * param.lenX / 4
-	seedSE, z := uniform(param.lseedSE/8+1), uniform(param.lenz/8)
-	sk.s = uniform(param.lens / 8)
+	rLen := 2 * param.no * param.n * param.lenX
+	seedSE, z := uniform(param.lseedSE+1), uniform(param.lenz)
+	sk.s = uniform(param.lens)
 
 	seedSE[0] = 0x5f
-	pk.seedA = param.shake(z, param.lseedA/8)
+	pk.seedA = param.shake(z, param.lseedA)
 	r := param.shake(seedSE, rLen)
 
 	A := param.Gen(pk.seedA)
@@ -54,34 +54,34 @@ func (param *Parameters) EncapsKeyGen() (pk *EncapsPublicKey, sk *EncapsSecretKe
 	pkh = append(pkh, pk.seedA...)
 	pkh = append(pkh, pk.b...)
 
-	sk.pkh = param.shake(pkh, param.lenpkh/8)
+	sk.pkh = param.shake(pkh, param.lenpkh)
 	sk.seedA = pk.seedA
 	sk.b = pk.b
 
 	return
 }
 
-// Encaps returns ciphertext and secret ss using public key
+// Encaps returns encapsulated ciphertext and secret ss using public key
 func (param *Parameters) Encaps(pk *EncapsPublicKey) (ct *EncapsCipherText, ss []byte) {
 
 	ct = new(EncapsCipherText)
 
-	rLen := ((param.m*param.no)*2 + param.n*param.m) * param.lenX / 8
-	m := uniform(param.lenM / 8)
+	rLen := ((param.m*param.no)*2 + param.n*param.m) * param.lenX
+	m := uniform(param.lenM)
 
 	var pKey, seedSE []byte
 	pKey = append(pKey, pk.seedA...)
 	pKey = append(pKey, pk.b...)
 
-	pkh := param.shake(pKey, param.lenpkh/8)
+	pkh := param.shake(pKey, param.lenpkh)
 	pkh = append(pkh, m...)
-	seed := param.shake(pkh, (param.lseedSE+param.lenk)/8)
+	seed := param.shake(pkh, param.lseedSE+param.lenk)
 
 	seedSE = append(seedSE, []byte{0x96}...)
-	seedSE = append(seedSE, seed[:(param.lseedSE/8)]...)
+	seedSE = append(seedSE, seed[:(param.lseedSE)]...)
 	r := param.shake(seedSE, rLen)
 
-	rLen = param.m * param.no * param.lenX / 8
+	rLen = param.m * param.no * param.lenX
 	S1 := param.SampleMatrix(r[:rLen], param.m, param.no)
 	E1 := param.SampleMatrix(r[rLen:2*rLen], param.m, param.no)
 	E2 := param.SampleMatrix(r[2*rLen:], param.m, param.n)
@@ -97,12 +97,12 @@ func (param *Parameters) Encaps(pk *EncapsPublicKey) (ct *EncapsCipherText, ss [
 	ct.c2 = param.Pack(C)
 
 	var temp, k []byte
-	k = append(k, seed[(param.lseedSE/8):]...)
+	k = append(k, seed[(param.lseedSE):]...)
 	temp = append(temp, ct.c1...)
 	temp = append(temp, ct.c2...)
 	temp = append(temp, k...)
 
-	ss = param.shake(temp, param.lenss/8)
+	ss = param.shake(temp, param.lenss)
 
 	return
 }
@@ -120,15 +120,15 @@ func (param *Parameters) Decaps(ct *EncapsCipherText, sk *EncapsSecretKey) (ss [
 	pkh = append(pkh, sk.pkh...)
 	pkh = append(pkh, m1...)
 
-	seed := param.shake(pkh, (param.lseedSE+param.lenk)/8)
+	seed := param.shake(pkh, param.lseedSE+param.lenk)
 
 	seedSE = append(seedSE, []byte{0x96}...)
-	seedSE = append(seedSE, seed[:(param.lseedSE/8)]...)
+	seedSE = append(seedSE, seed[:param.lseedSE]...)
 
-	rLen := (2*param.no + param.n) * param.m * param.lenX / 8
+	rLen := (2*param.no + param.n) * param.m * param.lenX
 	r := param.shake(seedSE, rLen)
 
-	rLen = param.m * param.no * param.lenX / 8
+	rLen = param.m * param.no * param.lenX
 	S1 := param.SampleMatrix(r[:rLen], param.m, param.no)
 	E1 := param.SampleMatrix(r[rLen:2*rLen], param.m, param.no)
 	E2 := param.SampleMatrix(r[2*rLen:], param.m, param.n)
@@ -145,13 +145,13 @@ func (param *Parameters) Decaps(ct *EncapsCipherText, sk *EncapsSecretKey) (ss [
 	res = append(res, ct.c2...)
 
 	if eqMatrices(B1, B2) == true && eqMatrices(C, C1) == true {
-		k1 = append(k1, seed[(param.lseedSE/8):]...)
+		k1 = append(k1, seed[(param.lseedSE):]...)
 		res = append(res, k1...)
 	} else {
 		res = append(res, sk.s...)
 	}
 
-	ss = param.shake(res, param.lenss/8)
+	ss = param.shake(res, param.lenss)
 
 	return
 }

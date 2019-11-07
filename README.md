@@ -22,6 +22,10 @@
 
 ## Math & Implementations
 
+The FrodoPKE scheme from this submission is an instantiation and implementation of the Lindner scheme with some modifications, such as the pseudorandom generation of the public matrix A from a small seed, more balanced key and ciphertext sizes, and new LWE parameters [\[FKEM\]](https://github.com/mariiatuzovska/frodokem/blob/master/papers/FrodoKEM-specification-20190702.pdf).
+The security of every public-key cryptosystem depends on the presumed intractability of one or more computational problems. In lattice-based cryptography, the (plain) LWE problem relates to solving a "noisy" linear system modulo a known integer; it can also be interpreted as the problem of decoding a random "unstructured" lattice from a certain class.
+
+
 **Vectors and matrices over the ring.** The ring of integers Z for a positive integer q, the quotient ring of integers modulo q is denoted by Zq = Z/qZ.
 
 **Realisation of matrices over the ring.** Matrix A (m*n) contains unsigned 16-bit numbers in ring of integers modulo q.
