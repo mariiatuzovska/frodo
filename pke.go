@@ -9,7 +9,7 @@ type PKE interface {
 
 // PublicKey structure contains seedA uniform bit string and n-by-m public matrix B є Zq
 type PublicKey struct {
-	seedA []byte     // uniform string
+	SeedA []byte     // uniform string
 	B     [][]uint16 // matrix є Zq
 }
 
@@ -27,14 +27,14 @@ type CipherText struct {
 func (param *Parameters) KeyGen() (pk *PublicKey, sk *SecretKey) {
 
 	pk, sk = new(PublicKey), new(SecretKey)
-	pk.seedA = uniform(param.lseedA)
+	pk.SeedA = uniform(param.lseedA)
 	rLen, seedSE := 2*param.no*param.n*param.lenX, uniform((param.lseedSE)+1)
 
 	seedSE[0] = 0x5F
 	r := param.shake(seedSE, rLen)
 
 	rLen /= 2
-	A := param.Gen(pk.seedA)
+	A := param.Gen(pk.SeedA)
 	sk.S = param.SampleMatrix(r[:rLen], param.no, param.n)
 	E := param.SampleMatrix(r[rLen:], param.no, param.n)
 	pk.B = param.mulAddMatrices(A, sk.S, E)
@@ -47,7 +47,7 @@ func (param *Parameters) KeyGen() (pk *PublicKey, sk *SecretKey) {
 // C2 = V + M = S1*B + E2 + M = S1*A*S + S1*E + E2 + M
 func (param *Parameters) Enc(message []byte, pk *PublicKey) *CipherText {
 	seedSE := uniform(param.lseedSE + 1)
-	A, rLen := param.Gen(pk.seedA), (2*param.no+param.n)*param.m*param.lenX
+	A, rLen := param.Gen(pk.SeedA), (2*param.no+param.n)*param.m*param.lenX
 
 	seedSE[0] = 0x96
 	r := param.shake(seedSE, rLen)
