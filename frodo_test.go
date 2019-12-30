@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mariiatuzovska/frodokem/frodo"
+	"github.com/mariiatuzovska/frodo"
 )
 
 // testing encryption & decryption
@@ -158,7 +158,7 @@ func TestEncodeDecode640(t *testing.T) {
 
 	for i := range m {
 		if m[i] != e[i] {
-			t.Error("frodo_test.go/TestEncodeDecode640: xpected secret", m[i], "but has got", e[i], "at index", i)
+			t.Error("frodo_test.go/TestEncodeDecode640: xpected", m[i], "but has got", e[i], "at index", i)
 		}
 	}
 }
@@ -178,7 +178,7 @@ func TestEncodeDecode976(t *testing.T) {
 
 	for i := range m {
 		if m[i] != e[i] {
-			t.Error("frodo_test.go/TestEncodeDecode976: expected secret", m[i], "but has got", e[i], "at index", i)
+			t.Error("frodo_test.go/TestEncodeDecode976: expected", m[i], "but has got", e[i], "at index", i)
 		}
 	}
 }
@@ -198,7 +198,7 @@ func TestEncodeDecode1344(t *testing.T) {
 
 	for i := range m {
 		if m[i] != e[i] {
-			t.Error("frodo_test.go/TestEncodeDecode1344: expected secret", m[i], "but has got", e[i], "at index", i)
+			t.Error("frodo_test.go/TestEncodeDecode1344: expected", m[i], "but has got", e[i], "at index", i)
 		}
 	}
 }
@@ -221,7 +221,7 @@ func TestUnpackPack640(t *testing.T) {
 
 	for i := range m {
 		if m[i] != e[i] {
-			t.Error("frodo_test.go/TestUnpakPack640: expected secret", m[i], "but has got", e[i], "at index", i)
+			t.Error("frodo_test.go/TestUnpakPack640: expected", m[i], "but has got", e[i], "at index", i)
 		}
 	}
 }
@@ -241,7 +241,7 @@ func TestUnpackPack976(t *testing.T) {
 
 	for i := range m {
 		if m[i] != e[i] {
-			t.Error("frodo_test.go/TestUnpakPack976: expected secret", m[i], "but has got", e[i], "at index", i)
+			t.Error("frodo_test.go/TestUnpakPack976: expected", m[i], "but has got", e[i], "at index", i)
 		}
 	}
 }
@@ -261,7 +261,7 @@ func TestUnpackPack1344(t *testing.T) {
 
 	for i := range m {
 		if m[i] != e[i] {
-			t.Error("frodo_test.go/TestUnpakPack1344: expected secret", m[i], "but has got", e[i], "at index", i)
+			t.Error("frodo_test.go/TestUnpakPack1344: expected", m[i], "but has got", e[i], "at index", i)
 		}
 	}
 }
@@ -286,7 +286,7 @@ func TestGen640(t *testing.T) {
 	for i := range M {
 		for j := range M[i] {
 			if M[i][j] != E[i][j] {
-				t.Error("frodo_test.go/TestUnpakPack640: expected secret", M[i][j], "but has got", E[i][j], "at index", i)
+				t.Error("frodo_test.go/TestUnpakPack640: expected", M[i][j], "but has got", E[i][j], "at index", i)
 			}
 		}
 	}
@@ -308,7 +308,7 @@ func TestGen976(t *testing.T) {
 	for i := range M {
 		for j := range M[i] {
 			if M[i][j] != E[i][j] {
-				t.Error("frodo_test.go/TestUnpakPack976: expected secret", M[i][j], "but has got", E[i][j], "at index", i)
+				t.Error("frodo_test.go/TestUnpakPack976: expected", M[i][j], "but has got", E[i][j], "at index", i)
 			}
 		}
 	}
@@ -330,7 +330,7 @@ func TestGen1344(t *testing.T) {
 	for i := range M {
 		for j := range M[i] {
 			if M[i][j] != E[i][j] {
-				t.Error("frodo_test.go/TestUnpakPack1344: expected secret", M[i][j], "but has got", E[i][j], "at index", i)
+				t.Error("frodo_test.go/TestUnpakPack1344: expected", M[i][j], "but has got", E[i][j], "at index", i)
 			}
 		}
 	}
@@ -356,7 +356,7 @@ func TestSample640(t *testing.T) {
 	for i := range M {
 		for j := range M[i] {
 			if M[i][j] != E[i][j] {
-				t.Error("frodo_test.go/TestSample640: expected secret", M[i][j], "but has got", E[i][j], "at index", i)
+				t.Error("frodo_test.go/TestSample640: expected", M[i][j], "but has got", E[i][j], "at index", i)
 			}
 		}
 	}
@@ -378,7 +378,7 @@ func TestSample976(t *testing.T) {
 	for i := range M {
 		for j := range M[i] {
 			if M[i][j] != E[i][j] {
-				t.Error("frodo_test.go/TestSample976: expected secret", M[i][j], "but has got", E[i][j], "at index", i)
+				t.Error("frodo_test.go/TestSample976: expected", M[i][j], "but has got", E[i][j], "at index", i)
 			}
 		}
 	}
@@ -400,7 +400,7 @@ func TestSample1344(t *testing.T) {
 	for i := range M {
 		for j := range M[i] {
 			if M[i][j] != E[i][j] {
-				t.Error("frodo_test.go/TestSample1344: expected secret", M[i][j], "but has got", E[i][j], "at index", i)
+				t.Error("frodo_test.go/TestSample1344: expected", M[i][j], "but has got", E[i][j], "at index", i)
 			}
 		}
 	}

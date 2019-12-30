@@ -42,7 +42,7 @@ The security of every public-key cryptosystem depends on the presumed intractabi
 
 :point_right: FrodoKEM specification [`papers`](https://github.com/mariiatuzovska/frodo/blob/master/papers/FrodoKEM-specification-20190702.pdf);
 
-:point_right: Matrix encoding of bit strings (decoding) [`frodo`](https://github.com/mariiatuzovska/frodo/blob/master/frodo/frodo.go);
+:point_right: Matrix encoding of bit strings (decoding) [`frodo`](https://github.com/mariiatuzovska/frodo/blob/master/frodo.go);
 
 :point_right: Deterministic random bit generation & pseudorandom matrix generation using SHAKE128 [`frodo`](https://github.com/mariiatuzovska/frodo/blob/master/frodo.go);
 
