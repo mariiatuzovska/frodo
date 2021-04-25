@@ -1,5 +1,5 @@
-module github.com/mariiatuzovska/frodo
+module github.com/mariiatuzovska/performance
 
 go 1.15
 
-require golang.org/x/crypto v0.0.0-20210322153248-0c34fe9e7dc2
+require github.com/mariiatuzovska/frodo v0.0.0-20210403100126-c3a17bc11437
